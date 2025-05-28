@@ -1,19 +1,13 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <style>
-    body { font-family: Arial, sans-serif; width: 300px; padding: 10px; }
-    #summary { white-space: pre-wrap; margin-top: 10px; }
-    input, button { width: 100%; margin-top: 5px; }
-  </style>
+  <style>body { font-family: Arial; padding: 10px; }</style>
 </head>
 <body>
   <h3>Summarize Page</h3>
-  <input id="apiKeyInput" placeholder="Enter OpenAI API Key" type="password" />
-  <button id="saveKeyBtn">Save API Key</button>
+  <input id="apiKeyInput" type="password" placeholder="OpenAI API Key" />
+  <button id="saveKeyBtn">Save Key</button>
   <button id="summarizeBtn">Summarize</button>
-  <div id="summary"></div>
-  <div id="status"></div>
   <script src="popup.js"></script>
 </body>
 </html>
