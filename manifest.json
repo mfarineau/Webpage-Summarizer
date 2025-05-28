@@ -1,0 +1,19 @@
+{
+  "manifest_version": 3,
+  "name": "Webpage Summarizer",
+  "version": "1.0",
+  "description": "Summarize the current webpage using OpenAI API.",
+  "permissions": ["storage", "scripting", "activeTab"],
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icon.png",
+      "48": "icon.png",
+      "128": "icon.png"
+    }
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "host_permissions": ["<all_urls>"]
+}
