@@ -1,14 +1,18 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <style>body { font-family: Arial; padding: 10px; }</style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <h3>Summarize Page</h3>
-  <input id="apiKeyInput" type="password" placeholder="OpenAI API Key" />
-  <button id="saveKeyBtn">Save Key</button>
-  <button id="summarizeBtn">Summarize</button>
-  <button id="removeAdsBtn">Remove Ads</button>
+  <h5 class="title">Summarize Page</h5>
+  <div class="input-field">
+    <input id="apiKeyInput" type="password" placeholder="OpenAI API Key">
+  </div>
+  <button id="saveKeyBtn" class="btn">Save Key</button>
+  <button id="summarizeBtn" class="btn">Summarize</button>
+  <button id="removeAdsBtn" class="btn grey">Remove Ads</button>
   <script src="popup.js"></script>
 </body>
 </html>
