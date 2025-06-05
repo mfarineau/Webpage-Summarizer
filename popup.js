@@ -34,3 +34,38 @@ document.getElementById('detectFrameworkBtn').addEventListener('click', async ()
     alert(`Framework: ${response || 'Unknown'}`);
   });
 });
+
+// The "Domain Info" button attempts to look up DNS and WHOIS data for the
+// current tab's domain and displays a simple alert with the results.
+document.getElementById('lookupBtn').addEventListener('click', async () => {
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  const url = new URL(tab.url);
+  const domain = url.hostname;
+
+  try {
+    const dnsRes = await fetch(`https://dns.google/resolve?name=${domain}&type=A`);
+    const dnsData = await dnsRes.json();
+    const ip = dnsData.Answer?.[0]?.data || 'Unknown';
+
+    const whoisRes = await fetch(`https://rdap.org/domain/${domain}`);
+    const whoisData = await whoisRes.json();
+    const registrant = (whoisData.entities || []).find(e => (e.roles || []).includes('registrant'));
+    const owner = registrant?.vcardArray?.[1]?.find(v => v[0] === 'fn')?.[3] || 'Unknown';
+
+    let hostInfo = '';
+    if (ip !== 'Unknown') {
+      try {
+        const ipRes = await fetch(`https://ipinfo.io/${ip}/json`);
+        const ipData = await ipRes.json();
+        hostInfo = ipData.org ? `${ipData.org} (${ipData.country})` : ipData.country || '';
+      } catch (err) {
+        hostInfo = '';
+      }
+    }
+
+    const message = `Domain: ${domain}\nOwner: ${owner}\nIP: ${ip}${hostInfo ? `\nHost: ${hostInfo}` : ''}`;
+    alert(message);
+  } catch (err) {
+    alert('Failed to lookup domain information.');
+  }
+});
