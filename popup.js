@@ -9,3 +9,8 @@ document.getElementById('summarizeBtn').addEventListener('click', async () => {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
   chrome.tabs.sendMessage(tab.id, { action: 'summarize_page' });
 });
+
+document.getElementById('removeAdsBtn').addEventListener('click', async () => {
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  chrome.tabs.sendMessage(tab.id, { action: 'remove_ads' });
+});
