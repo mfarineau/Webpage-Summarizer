@@ -1,14 +1,24 @@
+/* style.css
+ * ---------
+ * Basic Material-inspired styling for the popup window. The goal is to keep
+ * the layout simple and approachable for anyone new to front-end
+ * development.  Each section below targets a specific element in the popup.
+ */
+
+/* Overall styling for the popup window */
 body {
   font-family: Roboto, Arial, sans-serif;
   padding: 16px;
   margin: 0;
 }
 
+/* Header text at the top of the popup */
 .title {
   margin-bottom: 20px;
   font-size: 1.25rem;
 }
 
+/* Styles for the API key input box */
 .input-field input {
   border: none;
   border-bottom: 1px solid #9e9e9e;
@@ -20,10 +30,12 @@ body {
   background: transparent;
 }
 
+/* Highlight the bottom border when the input is focused */
 .input-field input:focus {
   border-bottom: 2px solid #6200ee;
 }
 
+/* Generic button style used for all buttons in the popup */
 .btn {
   background-color: #6200ee;
   border: none;
@@ -39,14 +51,17 @@ body {
   transition: background-color 0.2s;
 }
 
+/* Slightly darker background when hovering to show it's interactive */
 .btn:hover {
   background-color: #3700b3;
 }
 
+/* Alternate gray style used for the "Remove Ads" button */
 .btn.grey {
   background-color: #9e9e9e;
 }
 
+/* Darker gray on hover for consistency */
 .btn.grey:hover {
   background-color: #7e7e7e;
 }

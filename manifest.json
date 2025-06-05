@@ -1,4 +1,5 @@
 {
+  "_comment": "Manifest file describing the extension's capabilities. This extra key acts as a pseudo comment so we can keep the JSON valid.",
   "manifest_version": 3,
   "name": "Webpage Summarizer",
   "version": "1.0",
@@ -6,11 +7,13 @@
   "action": {
     "default_popup": "popup.html"
   },
+  "_comment_action": "The default popup that appears when the user clicks the extension icon.",
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
       "js": ["content.js"]
     }
   ],
+  "_comment_content_scripts": "content.js is injected into every page so we can display the summary widget and remove ads.",
   "host_permissions": ["<all_urls>"]
 }
