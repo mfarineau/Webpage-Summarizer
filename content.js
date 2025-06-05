@@ -20,18 +20,21 @@ async function injectSummaryWidget() {
     width: 400px;
     max-height: 60vh;
     background: white;
-    border: 1px solid #ccc;
-    box-shadow: 0 0 12px rgba(0,0,0,0.2);
-    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    border-radius: 4px;
     padding: 16px;
-    font-family: Arial, sans-serif;
+    font-family: Roboto, Arial, sans-serif;
     z-index: 999999;
     overflow-y: auto;
   `;
 
   const title = document.createElement('div');
   title.innerText = '🧠 Webpage Summary';
-  title.style = 'font-weight: bold; margin-bottom: 8px;';
+  title.style = `
+    font-weight: 500;
+    margin-bottom: 12px;
+    font-size: 1.1rem;
+  `;
 
   const content = document.createElement('div');
   content.innerHTML = '<p><em>Summarizing...</em></p>';
@@ -40,7 +43,16 @@ async function injectSummaryWidget() {
 
   const close = document.createElement('button');
   close.innerText = 'Dismiss';
-  close.style = 'margin-top: 10px; width: 100%;';
+  close.style = `
+    margin-top: 12px;
+    width: 100%;
+    background: #6200ee;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    padding: 8px 12px;
+    cursor: pointer;
+  `;
   close.onclick = () => container.remove();
 
   container.appendChild(title);
