@@ -30,6 +30,15 @@ body {
   background: transparent;
 }
 
+/* Background indicates whether an API key is stored */
+.input-field input.key-stored {
+  background-color: #d4edda; /* light green */
+}
+
+.input-field input.key-missing {
+  background-color: #f8d7da; /* light red */
+}
+
 /* Highlight the bottom border when the input is focused */
 .input-field input:focus {
   border-bottom: 2px solid #6200ee;
