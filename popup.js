@@ -94,3 +94,12 @@ document.getElementById('lookupBtn').addEventListener('click', async () => {
     alert('Failed to lookup domain information.');
   }
 });
+
+// Open the summary history page
+document.getElementById('historyBtn').addEventListener('click', () => {
+  if (chrome.runtime.openOptionsPage) {
+    chrome.runtime.openOptionsPage();
+  } else {
+    chrome.tabs.create({ url: chrome.runtime.getURL('history.html') });
+  }
+});

@@ -134,6 +134,7 @@ async function injectSummaryWidget(selectionText) {
 // Calls the OpenAI API to generate a summary for the provided text.
 // Returns the summary string on success or an error message on failure.
 async function fetchSummary(text, apiKey) {
+  let summary;
   try {
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -160,11 +161,24 @@ async function fetchSummary(text, apiKey) {
     // The API returns an object with an array of choices. We take the first
     // choice's message content as our summary.
     const data = await response.json();
-    return data.choices?.[0]?.message?.content || '❌ No summary returned.';
+    summary = data.choices?.[0]?.message?.content || '❌ No summary returned.';
   } catch (err) {
     // Handle errors such as network failures or invalid API keys
-    return '❌ Error fetching summary.';
+    summary = '❌ Error fetching summary.';
   }
+
+  // Store summary in local history
+  const entry = {
+    url: window.location.href,
+    timestamp: Date.now(),
+    summary
+  };
+  chrome.storage.local.get({ summary_history: [] }, ({ summary_history }) => {
+    summary_history.push(entry);
+    chrome.storage.local.set({ summary_history });
+  });
+
+  return summary;
 }
 // Takes the raw summary text returned from the API and converts it into
 // simple HTML. This allows us to keep sections and bullet points looking
