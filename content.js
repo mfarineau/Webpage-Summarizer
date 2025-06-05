@@ -19,7 +19,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     const result = detectFramework();
     sendResponse(result);
   }
-  return true;
+  // No asynchronous response, so we don't keep the message port open.
+  return false;
 });
 
 // Creates and displays the summary widget on the current page.
