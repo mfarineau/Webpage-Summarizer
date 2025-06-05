@@ -6,10 +6,28 @@
 
 // When the "Save Key" button is clicked we store the API key using
 // chrome.storage so it can be accessed by the content script later.
+const apiKeyInput = document.getElementById('apiKeyInput');
+
+function updateKeyColor(key) {
+  if (key) {
+    apiKeyInput.classList.remove('key-missing');
+    apiKeyInput.classList.add('key-stored');
+  } else {
+    apiKeyInput.classList.remove('key-stored');
+    apiKeyInput.classList.add('key-missing');
+  }
+}
+
+chrome.storage.local.get('openai_api_key', ({ openai_api_key }) => {
+  apiKeyInput.value = openai_api_key || '';
+  updateKeyColor(openai_api_key);
+});
+
 document.getElementById('saveKeyBtn').addEventListener('click', () => {
-  const key = document.getElementById('apiKeyInput').value.trim();
+  const key = apiKeyInput.value.trim();
   chrome.storage.local.set({ openai_api_key: key }, () => {
     alert('API Key saved!');
+    updateKeyColor(key);
   });
 });
 
