@@ -46,7 +46,6 @@ body {
 
 /* Generic button style used for all buttons in the popup */
 .btn {
-  background-color: #6200ee;
   border: none;
   color: white;
   padding: 10px 16px;
@@ -60,17 +59,28 @@ body {
   transition: background-color 0.2s;
 }
 
-/* Slightly darker background when hovering to show it's interactive */
-.btn:hover {
+/* Primary action button */
+.btn.primary {
+  background-color: #6200ee;
+}
+.btn.primary:hover {
   background-color: #3700b3;
 }
 
-/* Alternate gray style used for the "Remove Ads" button */
-.btn.grey {
+/* Secondary actions */
+.btn.secondary {
   background-color: #9e9e9e;
+  color: #fff;
+}
+.btn.secondary:hover {
+  background-color: #7e7e7e;
 }
 
-/* Darker gray on hover for consistency */
-.btn.grey:hover {
-  background-color: #7e7e7e;
+/* Tertiary actions */
+.btn.tertiary {
+  background-color: #e0e0e0;
+  color: #000;
+}
+.btn.tertiary:hover {
+  background-color: #bdbdbd;
 }
