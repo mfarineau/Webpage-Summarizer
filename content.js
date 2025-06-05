@@ -1,6 +1,8 @@
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === 'summarize_page') {
     injectSummaryWidget();
+  } else if (message.action === 'remove_ads') {
+    removeAds();
   }
 });
 
@@ -103,4 +105,15 @@ function formatSummary(text) {
   });
 
   return formatted.join('\n');
+}
+
+function removeAds() {
+  const selectors = [
+    '[id*="ad" i]',
+    '[class*="ad" i]',
+    'iframe[src*="ad" i]',
+    'iframe[src*="doubleclick" i]',
+    'iframe[src*="adservice" i]'
+  ];
+  document.querySelectorAll(selectors.join(',')).forEach(el => el.remove());
 }
