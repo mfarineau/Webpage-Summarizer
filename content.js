@@ -65,6 +65,21 @@ async function injectSummaryWidget() {
   content.id = 'summary-content';
   content.style = 'line-height: 1.5; font-size: 14px;';
 
+  // Button allowing users to copy the summary text to the clipboard
+  const copyBtn = document.createElement('button');
+  copyBtn.innerText = 'Copy';
+  copyBtn.style = `
+    margin-top: 8px;
+    width: 100%;
+    background: #6200ee;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    padding: 8px 12px;
+    cursor: pointer;
+  `;
+  copyBtn.onclick = () => navigator.clipboard.writeText(content.innerText);
+
   // Users can dismiss the summary widget with this button
   const close = document.createElement('button');
   close.innerText = 'Dismiss';
@@ -83,6 +98,7 @@ async function injectSummaryWidget() {
   // Assemble the widget and insert it into the page
   container.appendChild(title);
   container.appendChild(content);
+  container.appendChild(copyBtn);
   container.appendChild(close);
   document.body.appendChild(container);
 
