@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Webpage Summarizer",
   "version": "1.0",
-  "permissions": ["storage", "scripting", "activeTab", "tabs"],
+  "permissions": ["storage", "scripting", "activeTab", "tabs", "contextMenus"],
   "action": {
     "default_popup": "popup.html",
     "default_icon": "icon.png"
@@ -11,6 +11,9 @@
     "16": "icon.png",
     "48": "icon.png",
     "128": "icon.png"
+  },
+  "background": {
+    "service_worker": "background.js"
   },
   "content_scripts": [
     {

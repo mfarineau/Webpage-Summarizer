@@ -10,6 +10,15 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === 'summarize_page') {
     // User clicked "Summarize" in the popup – build the summary widget.
     injectSummaryWidget();
+  } else if (message.action === 'summarize_selection') {
+    // Summarize only the currently selected text if any is selected
+    const selection = window.getSelection().toString();
+    if (selection.trim()) {
+      injectSummaryWidget(selection);
+    } else {
+      alert('No text selected. Summarizing full page.');
+      injectSummaryWidget();
+    }
   } else if (message.action === 'remove_ads') {
     // User clicked "Remove Ads" – hide advertising elements.
     removeAds();
@@ -26,7 +35,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 // Creates and displays the summary widget on the current page.
 // The widget fetches text from the page, calls the OpenAI API and then
 // displays the result to the user.
-async function injectSummaryWidget() {
+async function injectSummaryWidget(selectionText) {
   // Remove any previous widget so we only have one instance.
   const old = document.getElementById('summary-widget');
   if (old) old.remove();
@@ -102,9 +111,9 @@ async function injectSummaryWidget() {
   container.appendChild(close);
   document.body.appendChild(container);
 
-  // Grab all text from the page to send to the API. We keep it simple by
-  // using innerText which ignores HTML markup.
-  const pageText = document.body.innerText;
+  // Grab the text to summarize. If a specific selection was provided use that,
+  // otherwise fall back to the full page text.
+  const pageText = selectionText || document.body.innerText;
 
   // Retrieve the user's OpenAI API key from extension storage. We need this
   // key to make requests to the chat completion endpoint.

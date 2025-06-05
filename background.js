@@ -1,5 +1,20 @@
 // background.js
 // -------------
-// This extension currently has no background tasks. The file is left here as
-// a placeholder in case future development requires persistent background
-// scripts (for example, to handle alarms or long-running connections).
+// Registers a context menu item that allows users to summarize highlighted
+// text directly from the page. When the menu item is clicked we forward a
+// message to the content script in the active tab instructing it to summarize
+// the selected text.
+
+chrome.runtime.onInstalled.addListener(() => {
+  chrome.contextMenus.create({
+    id: 'summarize-selection',
+    title: 'Summarize Selection',
+    contexts: ['selection']
+  });
+});
+
+chrome.contextMenus.onClicked.addListener((info, tab) => {
+  if (info.menuItemId === 'summarize-selection') {
+    chrome.tabs.sendMessage(tab.id, { action: 'summarize_selection' });
+  }
+});

@@ -38,6 +38,13 @@ document.getElementById('summarizeBtn').addEventListener('click', async () => {
   chrome.tabs.sendMessage(tab.id, { action: 'summarize_page' });
 });
 
+// The "Summarize Selection" button sends a message to the content script
+// instructing it to summarize the currently highlighted text.
+document.getElementById('summarizeSelectionBtn').addEventListener('click', async () => {
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  chrome.tabs.sendMessage(tab.id, { action: 'summarize_selection' });
+});
+
 // The "Remove Ads" button triggers the ad removal routine on the current page.
 document.getElementById('removeAdsBtn').addEventListener('click', async () => {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
