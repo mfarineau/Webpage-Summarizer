@@ -8,7 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
     list.innerHTML = '';
     history.forEach((item, idx) => {
       const li = document.createElement('li');
-      li.style.marginBottom = '16px';
+      li.className = 'history-item';
       li.innerHTML = `
         <div><a href="${item.url}" target="_blank">${item.url}</a> - ${new Date(item.timestamp).toLocaleString()}</div>
         <div>${item.summary}</div>

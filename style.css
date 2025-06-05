@@ -84,3 +84,36 @@ body {
 .btn.tertiary:hover {
   background-color: #bdbdbd;
 }
+/* History page container */
+/* History list styling */
+.history-list {
+  list-style: none;
+  padding: 0;
+}
+.history-container {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+/* Individual history item styled like a Material card */
+.history-item {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border-radius: 4px;
+  padding: 16px;
+  margin-bottom: 16px;
+  background-color: #fff;
+}
+
+.history-item a {
+  color: #6200ee;
+  text-decoration: none;
+}
+.history-item a:hover {
+  text-decoration: underline;
+}
+
+/* Delete button in history items */
+.history-item .btn {
+  width: auto;
+  margin-top: 8px;
+}
