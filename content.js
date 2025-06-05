@@ -13,7 +13,13 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   } else if (message.action === 'remove_ads') {
     // User clicked "Remove Ads" – hide advertising elements.
     removeAds();
+  } else if (message.action === 'detect_framework') {
+    // Identify the framework/CMS used by the current page and
+    // send the result back to the popup.
+    const result = detectFramework();
+    sendResponse(result);
   }
+  return true;
 });
 
 // Creates and displays the summary widget on the current page.
@@ -173,4 +179,36 @@ function removeAds() {
     'iframe[src*="adservice" i]'
   ];
   document.querySelectorAll(selectors.join(',')).forEach(el => el.remove());
+}
+
+// Attempt to guess which framework or CMS the page is built with by
+// inspecting meta tags and common file paths. Returns a string describing
+// the detected framework or "Unknown" if no hints are found.
+function detectFramework() {
+  const generator = document.querySelector("meta[name='generator']")?.content || '';
+
+  if (/Drupal/i.test(generator)) {
+    const version = generator.match(/\d+(\.\d+)+/);
+    return version ? `Drupal ${version[0]}` : 'Drupal';
+  }
+
+  if (/WordPress/i.test(generator)) {
+    const version = generator.match(/\d+(\.\d+)+/);
+    return version ? `WordPress ${version[0]}` : 'WordPress';
+  }
+
+  if (/Joomla/i.test(generator)) {
+    const version = generator.match(/\d+(\.\d+)+/);
+    return version ? `Joomla ${version[0]}` : 'Joomla';
+  }
+
+  if (document.querySelector("link[href*='wp-content'], script[src*='wp-content']")) {
+    return 'WordPress';
+  }
+
+  if (document.querySelector("script[src*='drupal'], link[href*='drupal'], [data-drupal-selector]")) {
+    return 'Drupal';
+  }
+
+  return 'Unknown';
 }

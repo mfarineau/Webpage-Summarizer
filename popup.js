@@ -25,3 +25,12 @@ document.getElementById('removeAdsBtn').addEventListener('click', async () => {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
   chrome.tabs.sendMessage(tab.id, { action: 'remove_ads' });
 });
+
+// The "Detect Framework" button attempts to identify what CMS or
+// framework the current site is built with and alerts the result.
+document.getElementById('detectFrameworkBtn').addEventListener('click', async () => {
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  chrome.tabs.sendMessage(tab.id, { action: 'detect_framework' }, (response) => {
+    alert(`Framework: ${response || 'Unknown'}`);
+  });
+});
