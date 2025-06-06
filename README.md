@@ -8,4 +8,4 @@ Every time a summary is generated the extension saves it locally with the page U
 
 ## Manage Cookies
 
-Use the **Manage Cookies** button in the popup to identify common tracking cookies set by the current site. If any are found you'll be prompted to remove them.
+Use the **Manage Cookies** button in the popup to view common tracking cookies set by the current site. Pressing the button opens a small modal listing each tracking cookie along with a short description of its purpose. From the modal you can delete all of the listed cookies with a single click.
