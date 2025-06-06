@@ -1,6 +1,6 @@
 # Webpage Summarizer Extension
 
-A simple Chrome extension that uses OpenAI to summarize the current page or selected text. The popup also provides utilities like ad removal, framework detection and domain info lookup.
+A simple Chrome extension that uses OpenAI to summarize the current page or selected text. The summary popup now includes a few images from the page and the popup provides utilities like ad removal, framework detection and domain info lookup.
 
 ## Summary History
 
