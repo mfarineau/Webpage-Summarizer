@@ -47,11 +47,11 @@ async function injectSummaryWidget(selectionText) {
     position: fixed;        /* stay fixed in the corner */
     bottom: 20px;
     right: 20px;
-    width: 400px;
-    max-height: 60vh;       /* don't grow beyond 60% of viewport height */
-    background: white;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-    border-radius: 4px;
+    width: 420px;
+    max-height: 70vh;       /* don't grow beyond 70% of viewport height */
+    background: #fff;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    border-radius: 8px;
     padding: 16px;
     font-family: Roboto, Arial, sans-serif;
     z-index: 999999;        /* appear on top of most things */
@@ -63,8 +63,12 @@ async function injectSummaryWidget(selectionText) {
   title.innerText = '🧠 Webpage Summary';
   title.style = `
     font-weight: 500;
-    margin-bottom: 12px;
+    margin: -16px -16px 12px -16px;
     font-size: 1.1rem;
+    padding: 8px 12px;
+    background: #6200ee;
+    color: #fff;
+    border-radius: 8px 8px 0 0;
   `;
 
   // This element will hold the summary text returned from the API.
@@ -72,7 +76,21 @@ async function injectSummaryWidget(selectionText) {
   const content = document.createElement('div');
   content.innerHTML = '<p><em>Summarizing...</em></p>';
   content.id = 'summary-content';
-  content.style = 'line-height: 1.5; font-size: 14px;';
+  content.style = 'line-height: 1.5; font-size: 14px; margin-top: 8px; color: #222;';
+
+  // Grab a few images from the page to display alongside the summary
+  const imagesContainer = document.createElement('div');
+  imagesContainer.style = 'display:flex; gap:6px; margin-bottom:12px; overflow-x:auto;';
+  const imgUrls = Array.from(document.querySelectorAll('img'))
+    .map(img => img.currentSrc || img.src)
+    .filter(src => src && !src.startsWith('data:'))
+    .slice(0, 3);
+  imgUrls.forEach(url => {
+    const imgEl = document.createElement('img');
+    imgEl.src = url;
+    imgEl.style = 'max-height:80px; border-radius:4px;';
+    imagesContainer.appendChild(imgEl);
+  });
 
   // Button allowing users to copy the summary text to the clipboard
   const copyBtn = document.createElement('button');
@@ -106,6 +124,7 @@ async function injectSummaryWidget(selectionText) {
 
   // Assemble the widget and insert it into the page
   container.appendChild(title);
+  container.appendChild(imagesContainer);
   container.appendChild(content);
   container.appendChild(copyBtn);
   container.appendChild(close);
