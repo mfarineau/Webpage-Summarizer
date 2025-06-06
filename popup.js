@@ -51,7 +51,70 @@ document.getElementById('removeAdsBtn').addEventListener('click', async () => {
   chrome.tabs.sendMessage(tab.id, { action: 'remove_ads' });
 });
 
-// Identify tracking cookies for the current site and optionally delete them
+// Simple descriptions for common tracking cookies
+function getCookieDescription(name) {
+  const lower = name.toLowerCase();
+  const map = {
+    '_ga': 'Google Analytics user identifier',
+    '_gid': 'Google Analytics session identifier',
+    '_gat': 'Google Analytics throttling cookie',
+    '_fbp': 'Facebook Pixel tracking',
+    'fr': 'Facebook advertising cookie'
+  };
+  for (const key in map) {
+    if (lower.includes(key)) {
+      return map[key];
+    }
+  }
+  return 'Likely used for tracking or advertising';
+}
+
+function showCookieModal(cookies) {
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+
+  const modal = document.createElement('div');
+  modal.className = 'modal';
+
+  const title = document.createElement('h4');
+  title.textContent = 'Tracking Cookies';
+  modal.appendChild(title);
+
+  const list = document.createElement('ul');
+  cookies.forEach(c => {
+    const li = document.createElement('li');
+    li.innerHTML = `<strong>${c.name}</strong><br><small>${getCookieDescription(c.name)}</small>`;
+    list.appendChild(li);
+  });
+  modal.appendChild(list);
+
+  const delBtn = document.createElement('button');
+  delBtn.className = 'btn secondary';
+  delBtn.textContent = 'Delete Cookies';
+
+  const closeBtn = document.createElement('button');
+  closeBtn.className = 'btn tertiary';
+  closeBtn.textContent = 'Close';
+
+  modal.appendChild(delBtn);
+  modal.appendChild(closeBtn);
+  overlay.appendChild(modal);
+  document.body.appendChild(overlay);
+
+  delBtn.addEventListener('click', () => {
+    cookies.forEach(c => {
+      const protocol = c.secure ? 'https:' : 'http:';
+      const url = `${protocol}//${c.domain.replace(/^\./, '')}${c.path}`;
+      chrome.cookies.remove({ url, name: c.name });
+    });
+    overlay.remove();
+    alert('Tracking cookies deleted.');
+  });
+
+  closeBtn.addEventListener('click', () => overlay.remove());
+}
+
+// Identify tracking cookies for the current site and display them in a modal
 document.getElementById('checkCookiesBtn').addEventListener('click', async () => {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
   chrome.cookies.getAll({ url: tab.url }, (cookies) => {
@@ -63,15 +126,7 @@ document.getElementById('checkCookiesBtn').addEventListener('click', async () =>
       return;
     }
 
-    const names = tracking.map(c => c.name).join(', ');
-    if (confirm(`Tracking cookies detected: ${names}\nDelete them?`)) {
-      tracking.forEach(c => {
-        const protocol = c.secure ? 'https:' : 'http:';
-        const url = `${protocol}//${c.domain.replace(/^\./, '')}${c.path}`;
-        chrome.cookies.remove({ url, name: c.name });
-      });
-      alert('Tracking cookies deleted.');
-    }
+    showCookieModal(tracking);
   });
 });
 
