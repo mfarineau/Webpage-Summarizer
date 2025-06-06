@@ -51,6 +51,30 @@ document.getElementById('removeAdsBtn').addEventListener('click', async () => {
   chrome.tabs.sendMessage(tab.id, { action: 'remove_ads' });
 });
 
+// Identify tracking cookies for the current site and optionally delete them
+document.getElementById('checkCookiesBtn').addEventListener('click', async () => {
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  chrome.cookies.getAll({ url: tab.url }, (cookies) => {
+    const trackerPatterns = /(_ga|_gid|_fb|fr|track|ad|pixel|collect|analytics)/i;
+    const tracking = cookies.filter(c => trackerPatterns.test(c.name));
+
+    if (tracking.length === 0) {
+      alert('No tracking cookies found.');
+      return;
+    }
+
+    const names = tracking.map(c => c.name).join(', ');
+    if (confirm(`Tracking cookies detected: ${names}\nDelete them?`)) {
+      tracking.forEach(c => {
+        const protocol = c.secure ? 'https:' : 'http:';
+        const url = `${protocol}//${c.domain.replace(/^\./, '')}${c.path}`;
+        chrome.cookies.remove({ url, name: c.name });
+      });
+      alert('Tracking cookies deleted.');
+    }
+  });
+});
+
 // The "Detect Framework" button attempts to identify what CMS or
 // framework the current site is built with and alerts the result.
 document.getElementById('detectFrameworkBtn').addEventListener('click', async () => {
