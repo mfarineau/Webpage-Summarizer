@@ -55,7 +55,10 @@ async function injectSummaryWidget(selectionText) {
     padding: 16px;
     font-family: Roboto, Arial, sans-serif;
     z-index: 999999;        /* appear on top of most things */
-    overflow-y: auto;       /* scroll if the summary is long */
+    overflow: auto;         /* scroll if the summary is long */
+    resize: both;           /* allow manual resizing */
+    left: auto;
+    top: auto;
   `;
 
   // A simple title for the widget so users know what they're looking at
@@ -129,6 +132,30 @@ async function injectSummaryWidget(selectionText) {
   container.appendChild(copyBtn);
   container.appendChild(close);
   document.body.appendChild(container);
+
+  // Allow the widget to be dragged by its title bar
+  title.style.cursor = 'move';
+  title.addEventListener('mousedown', (e) => {
+    e.preventDefault();
+    const rect = container.getBoundingClientRect();
+    const offsetX = e.clientX - rect.left;
+    const offsetY = e.clientY - rect.top;
+
+    function onMove(ev) {
+      container.style.left = `${ev.clientX - offsetX}px`;
+      container.style.top = `${ev.clientY - offsetY}px`;
+      container.style.right = 'auto';
+      container.style.bottom = 'auto';
+    }
+
+    function onUp() {
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup', onUp);
+    }
+
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+  });
 
   // Grab the text to summarize. If a specific selection was provided use that,
   // otherwise fall back to the full page text.
