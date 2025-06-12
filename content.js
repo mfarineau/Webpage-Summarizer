@@ -22,6 +22,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   } else if (message.action === 'remove_ads') {
     // User clicked "Remove Ads" – hide advertising elements.
     removeAds();
+  } else if (message.action === 'save_page') {
+    // Save the current page content minus ads
+    savePage();
   } else if (message.action === 'detect_framework') {
     // Identify the framework/CMS used by the current page and
     // send the result back to the popup.
@@ -264,10 +267,32 @@ function formatSummary(text) {
   return formatted.join('\n');
 }
 
+// Save the current page's HTML (minus ads) to local storage for later viewing
+function savePage() {
+  const clone = document.documentElement.cloneNode(true);
+  removeAds(clone);
+
+  // Ensure relative links work when opened from storage
+  const base = clone.querySelector('base');
+  if (!base) {
+    const baseEl = document.createElement('base');
+    baseEl.href = location.href;
+    clone.querySelector('head')?.appendChild(baseEl);
+  }
+
+  const html = '<!DOCTYPE html>\n' + clone.outerHTML;
+  const entry = { url: location.href, timestamp: Date.now(), content: html };
+  chrome.storage.local.get({ page_history: [] }, ({ page_history }) => {
+    page_history.push(entry);
+    chrome.storage.local.set({ page_history });
+    alert('Page saved!');
+  });
+}
+
 // Simple ad remover used when the user presses the "Remove Ads" button in the
 // popup.  It looks for elements that commonly contain advertisements and removes
 // them from the page.
-function removeAds() {
+function removeAds(root = document) {
   const selectors = [
     '[id*="ad" i]',
     '[class*="ad" i]',
@@ -275,7 +300,7 @@ function removeAds() {
     'iframe[src*="doubleclick" i]',
     'iframe[src*="adservice" i]'
   ];
-  document.querySelectorAll(selectors.join(',')).forEach(el => el.remove());
+  root.querySelectorAll(selectors.join(',')).forEach(el => el.remove());
 }
 
 // Attempt to guess which framework or CMS the page is built with by

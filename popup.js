@@ -54,6 +54,12 @@ document.getElementById('removeAdsBtn').addEventListener('click', async () => {
   chrome.tabs.sendMessage(tab.id, { action: 'remove_ads' });
 });
 
+// Save the current page content for later reading
+document.getElementById('savePageBtn').addEventListener('click', async () => {
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  chrome.tabs.sendMessage(tab.id, { action: 'save_page' });
+});
+
 // Simple descriptions for common tracking cookies
 function getCookieDescription(name) {
   const lower = name.toLowerCase();
