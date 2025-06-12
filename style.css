@@ -30,6 +30,17 @@ body {
   background: transparent;
 }
 
+/* Dropdown styling matches the input field */
+.input-field select {
+  border: none;
+  border-bottom: 1px solid #9e9e9e;
+  width: 100%;
+  padding: 4px 0 8px 0;
+  box-sizing: border-box;
+  outline: none;
+  background: transparent;
+}
+
 /* Background indicates whether an API key is stored */
 .input-field input.key-stored {
   background-color: #d4edda; /* light green */
@@ -41,6 +52,10 @@ body {
 
 /* Highlight the bottom border when the input is focused */
 .input-field input:focus {
+  border-bottom: 2px solid #6200ee;
+}
+
+.input-field select:focus {
   border-bottom: 2px solid #6200ee;
 }
 
