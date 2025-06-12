@@ -7,6 +7,7 @@
 // When the "Save Key" button is clicked we store the API key using
 // chrome.storage so it can be accessed by the content script later.
 const apiKeyInput = document.getElementById('apiKeyInput');
+const toneSelect = document.getElementById('toneSelect');
 
 function updateKeyColor(key) {
   if (key) {
@@ -35,14 +36,16 @@ document.getElementById('saveKeyBtn').addEventListener('click', () => {
 // active tab instructing it to inject the summary widget.
 document.getElementById('summarizeBtn').addEventListener('click', async () => {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-  chrome.tabs.sendMessage(tab.id, { action: 'summarize_page' });
+  const tone = toneSelect.value;
+  chrome.tabs.sendMessage(tab.id, { action: 'summarize_page', tone });
 });
 
 // The "Summarize Selection" button sends a message to the content script
 // instructing it to summarize the currently highlighted text.
 document.getElementById('summarizeSelectionBtn').addEventListener('click', async () => {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-  chrome.tabs.sendMessage(tab.id, { action: 'summarize_selection' });
+  const tone = toneSelect.value;
+  chrome.tabs.sendMessage(tab.id, { action: 'summarize_selection', tone });
 });
 
 // The "Remove Ads" button triggers the ad removal routine on the current page.

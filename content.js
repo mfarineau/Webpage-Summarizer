@@ -9,15 +9,15 @@
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === 'summarize_page') {
     // User clicked "Summarize" in the popup – build the summary widget.
-    injectSummaryWidget();
+    injectSummaryWidget(undefined, message.tone);
   } else if (message.action === 'summarize_selection') {
     // Summarize only the currently selected text if any is selected
     const selection = window.getSelection().toString();
     if (selection.trim()) {
-      injectSummaryWidget(selection);
+      injectSummaryWidget(selection, message.tone);
     } else {
       alert('No text selected. Summarizing full page.');
-      injectSummaryWidget();
+      injectSummaryWidget(undefined, message.tone);
     }
   } else if (message.action === 'remove_ads') {
     // User clicked "Remove Ads" – hide advertising elements.
@@ -35,7 +35,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 // Creates and displays the summary widget on the current page.
 // The widget fetches text from the page, calls the OpenAI API and then
 // displays the result to the user.
-async function injectSummaryWidget(selectionText) {
+async function injectSummaryWidget(selectionText, tone = 'Executive') {
   // Remove any previous widget so we only have one instance.
   const old = document.getElementById('summary-widget');
   if (old) old.remove();
@@ -171,7 +171,7 @@ async function injectSummaryWidget(selectionText) {
     }
 
     // Fetch the summary and update the widget with the formatted text
-    const summary = await fetchSummary(pageText, openai_api_key);
+    const summary = await fetchSummary(pageText, openai_api_key, tone);
     const formatted = formatSummary(summary);
     content.innerHTML = formatted;
   });
@@ -179,7 +179,7 @@ async function injectSummaryWidget(selectionText) {
 
 // Calls the OpenAI API to generate a summary for the provided text.
 // Returns the summary string on success or an error message on failure.
-async function fetchSummary(text, apiKey) {
+async function fetchSummary(text, apiKey, tone = 'Executive') {
   let summary;
   try {
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -193,7 +193,7 @@ async function fetchSummary(text, apiKey) {
         messages: [
           {
             role: 'system',
-            content: 'You are a helpful assistant that summarizes web pages in the style of an executive summary.'
+            content: getSystemPrompt(tone)
           },
           {
             role: 'user',
@@ -225,6 +225,17 @@ async function fetchSummary(text, apiKey) {
   });
 
   return summary;
+}
+
+function getSystemPrompt(tone) {
+  switch (tone) {
+    case 'Bullet Points':
+      return 'You are a helpful assistant that summarizes web pages using clear and concise bullet points.';
+    case 'Casual':
+      return 'You are a helpful assistant that summarizes web pages in a casual, conversational tone.';
+    default:
+      return 'You are a helpful assistant that summarizes web pages in the style of an executive summary.';
+  }
 }
 // Takes the raw summary text returned from the API and converts it into
 // simple HTML. This allows us to keep sections and bullet points looking
