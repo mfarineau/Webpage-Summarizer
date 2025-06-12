@@ -6,6 +6,10 @@ A simple Chrome extension that uses OpenAI to summarize the current page or sele
 
 Every time a summary is generated the extension saves it locally with the page URL and timestamp. Click the **History** button in the popup to view your saved summaries. From the history page you can open the original page or delete individual entries.
 
+## Save Pages
+
+Press the **Save Page** button in the popup to store the full HTML of the current site for offline reading. Ads are removed automatically but all other content, including images, is preserved. Saved pages are listed in the history view where you can open or delete them.
+
 ## Manage Cookies
 
 Use the **Manage Cookies** button in the popup to view common tracking cookies set by the current site. Pressing the button opens a small modal listing each tracking cookie along with a short description of its purpose. From the modal you can delete all of the listed cookies with a single click.
