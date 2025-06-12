@@ -282,6 +282,7 @@ async function injectBiasWidget() {
   });
 
   const pageText = document.body.innerText;
+  const author = detectAuthor();
 
   chrome.storage.local.get('openai_api_key', async ({ openai_api_key }) => {
     if (!openai_api_key) {
@@ -289,7 +290,7 @@ async function injectBiasWidget() {
       return;
     }
 
-    const analysis = await fetchBias(pageText, openai_api_key);
+    const analysis = await fetchBias(pageText, openai_api_key, author);
     const formatted = formatSummary(analysis);
     content.innerHTML = formatted;
   });
@@ -346,7 +347,7 @@ async function fetchSummary(text, apiKey, tone = 'Executive') {
 }
 
 // Call OpenAI to analyze the political bias of the text.
-async function fetchBias(text, apiKey) {
+async function fetchBias(text, apiKey, author = '') {
   try {
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -363,7 +364,7 @@ async function fetchBias(text, apiKey) {
           },
           {
             role: 'user',
-            content: `Analyze the political bias of the following article. Indicate if it leans left, right or is neutral and list signs of bias.\n\n${text.substring(0, 8000)}`
+            content: `Analyze the political bias of the following article. Indicate if it leans left, right or is neutral and list signs of bias.\n\n${text.substring(0, 8000)}${author ? `\n\nThe author is "${author}". Research up to 25 recent articles by this author and provide an overall bias rating for the author's work.` : ''}`
           }
         ],
         temperature: 0
@@ -448,6 +449,21 @@ function removeAds(root = document) {
     'iframe[src*="adservice" i]'
   ];
   root.querySelectorAll(selectors.join(',')).forEach(el => el.remove());
+}
+
+// Attempt to extract the author name from common meta tags or byline elements
+function detectAuthor() {
+  let author = document.querySelector("meta[name='author']")?.content;
+  if (author) {
+    return author.trim();
+  }
+
+  const el = document.querySelector("[itemprop='author'] [itemprop='name'], [rel='author'], .byline, .author");
+  if (el) {
+    return el.textContent.trim();
+  }
+
+  return '';
 }
 
 // Attempt to guess which framework or CMS the page is built with by
