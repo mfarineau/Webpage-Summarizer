@@ -24,9 +24,13 @@ document.addEventListener('DOMContentLoaded', () => {
     pages.forEach((item, idx) => {
       const li = document.createElement('li');
       li.className = 'history-item';
+
+      const blob = new Blob([item.content], { type: 'text/html' });
+      const viewUrl = URL.createObjectURL(blob);
+
       li.innerHTML = `
         <div><a href="${item.url}" target="_blank">${item.url}</a> - ${new Date(item.timestamp).toLocaleString()}</div>
-        <button data-index="${idx}" class="btn secondary view">View</button>
+        <iframe src="${viewUrl}" class="saved-page-frame"></iframe>
         <button data-index="${idx}" class="btn tertiary delete">Delete</button>
       `;
       pageList.appendChild(li);
@@ -49,17 +53,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   pageList.addEventListener('click', (e) => {
-    if (e.target.classList.contains('view')) {
-      const idx = parseInt(e.target.dataset.index, 10);
-      chrome.storage.local.get({ page_history: [] }, ({ page_history }) => {
-        const page = page_history[idx];
-        if (page) {
-          const blob = new Blob([page.content], { type: 'text/html' });
-          const url = URL.createObjectURL(blob);
-          chrome.tabs.create({ url });
-        }
-      });
-    } else if (e.target.classList.contains('delete')) {
+    if (e.target.classList.contains('delete')) {
       const idx = parseInt(e.target.dataset.index, 10);
       chrome.storage.local.get({ page_history: [] }, ({ page_history }) => {
         page_history.splice(idx, 1);

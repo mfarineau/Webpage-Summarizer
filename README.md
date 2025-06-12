@@ -8,7 +8,7 @@ Every time a summary is generated the extension saves it locally with the page U
 
 ## Save Pages
 
-Press the **Save Page** button in the popup to store the full HTML of the current site for offline reading. Ads are removed automatically but all other content, including images, is preserved. Saved pages are listed in the history view where you can open or delete them.
+Press the **Save Page** button in the popup to store the full HTML of the current site for offline reading. Ads are removed automatically but all other content, including images, is preserved. Saved pages are listed in the history view where the full page is embedded for quick reference. You can delete any entry at any time.
 
 ## Manage Cookies
 
