@@ -48,6 +48,12 @@ document.getElementById('summarizeSelectionBtn').addEventListener('click', async
   chrome.tabs.sendMessage(tab.id, { action: 'summarize_selection', tone });
 });
 
+// Request a bias analysis of the current page
+document.getElementById('biasBtn').addEventListener('click', async () => {
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  chrome.tabs.sendMessage(tab.id, { action: 'analyze_bias' });
+});
+
 // The "Remove Ads" button triggers the ad removal routine on the current page.
 document.getElementById('removeAdsBtn').addEventListener('click', async () => {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });

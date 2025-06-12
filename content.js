@@ -30,6 +30,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     // send the result back to the popup.
     const result = detectFramework();
     sendResponse(result);
+  } else if (message.action === 'analyze_bias') {
+    // Analyze potential political bias in the current page
+    injectBiasWidget();
   }
   // No asynchronous response, so we don't keep the message port open.
   return false;
@@ -180,6 +183,118 @@ async function injectSummaryWidget(selectionText, tone = 'Executive') {
   });
 }
 
+// Creates and displays a bias analysis widget on the page.
+async function injectBiasWidget() {
+  const old = document.getElementById('bias-widget');
+  if (old) old.remove();
+
+  const container = document.createElement('div');
+  container.id = 'bias-widget';
+  container.style = `
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 420px;
+    max-height: 50vh;
+    background: #fff;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    border-radius: 8px;
+    padding: 16px;
+    font-family: Roboto, Arial, sans-serif;
+    z-index: 999999;
+    overflow: auto;
+    resize: both;
+    left: auto;
+    top: auto;
+  `;
+
+  const title = document.createElement('div');
+  title.innerText = '📰 Bias Analysis';
+  title.style = `
+    font-weight: 500;
+    margin: -16px -16px 12px -16px;
+    font-size: 1.1rem;
+    padding: 8px 12px;
+    background: #6200ee;
+    color: #fff;
+    border-radius: 8px 8px 0 0;
+  `;
+
+  const content = document.createElement('div');
+  content.innerHTML = '<p><em>Analyzing...</em></p>';
+  content.style = 'line-height: 1.5; font-size: 14px; margin-top: 8px; color: #222;';
+
+  const copyBtn = document.createElement('button');
+  copyBtn.innerText = 'Copy';
+  copyBtn.style = `
+    margin-top: 8px;
+    width: 100%;
+    background: #6200ee;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    padding: 8px 12px;
+    cursor: pointer;
+  `;
+  copyBtn.onclick = () => navigator.clipboard.writeText(content.innerText);
+
+  const close = document.createElement('button');
+  close.innerText = 'Dismiss';
+  close.style = `
+    margin-top: 12px;
+    width: 100%;
+    background: #6200ee;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    padding: 8px 12px;
+    cursor: pointer;
+  `;
+  close.onclick = () => container.remove();
+
+  container.appendChild(title);
+  container.appendChild(content);
+  container.appendChild(copyBtn);
+  container.appendChild(close);
+  document.body.appendChild(container);
+
+  title.style.cursor = 'move';
+  title.addEventListener('mousedown', (e) => {
+    e.preventDefault();
+    const rect = container.getBoundingClientRect();
+    const offsetX = e.clientX - rect.left;
+    const offsetY = e.clientY - rect.top;
+
+    function onMove(ev) {
+      container.style.left = `${ev.clientX - offsetX}px`;
+      container.style.top = `${ev.clientY - offsetY}px`;
+      container.style.right = 'auto';
+      container.style.bottom = 'auto';
+    }
+
+    function onUp() {
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup', onUp);
+    }
+
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+  });
+
+  const pageText = document.body.innerText;
+
+  chrome.storage.local.get('openai_api_key', async ({ openai_api_key }) => {
+    if (!openai_api_key) {
+      content.innerText = '⚠️ No API key found. Please save it in the extension popup.';
+      return;
+    }
+
+    const analysis = await fetchBias(pageText, openai_api_key);
+    const formatted = formatSummary(analysis);
+    content.innerHTML = formatted;
+  });
+}
+
 // Calls the OpenAI API to generate a summary for the provided text.
 // Returns the summary string on success or an error message on failure.
 async function fetchSummary(text, apiKey, tone = 'Executive') {
@@ -228,6 +343,38 @@ async function fetchSummary(text, apiKey, tone = 'Executive') {
   });
 
   return summary;
+}
+
+// Call OpenAI to analyze the political bias of the text.
+async function fetchBias(text, apiKey) {
+  try {
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'gpt-4',
+        messages: [
+          {
+            role: 'system',
+            content: 'You analyze political bias in news articles and respond concisely.'
+          },
+          {
+            role: 'user',
+            content: `Analyze the political bias of the following article. Indicate if it leans left, right or is neutral and list signs of bias.\n\n${text.substring(0, 8000)}`
+          }
+        ],
+        temperature: 0
+      }),
+    });
+
+    const data = await response.json();
+    return data.choices?.[0]?.message?.content || '❌ No analysis returned.';
+  } catch (err) {
+    return '❌ Error analyzing bias.';
+  }
 }
 
 function getSystemPrompt(tone) {
