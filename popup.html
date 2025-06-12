@@ -23,16 +23,22 @@
   </div>
 
   <!-- Buttons ordered by importance -->
-  <button id="summarizeBtn" class="btn primary">Summarize</button>
-  <button id="summarizeSelectionBtn" class="btn secondary">Summarize Selection</button>
-  <button id="biasBtn" class="btn secondary">Analyze Bias</button>
-  <button id="removeAdsBtn" class="btn secondary">Remove Ads</button>
-  <button id="checkCookiesBtn" class="btn secondary">Manage Cookies</button>
-  <button id="savePageBtn" class="btn secondary">Save Page</button>
-  <button id="saveKeyBtn" class="btn tertiary">Save Key</button>
-  <button id="detectFrameworkBtn" class="btn tertiary">Detect Framework</button>
-  <button id="lookupBtn" class="btn tertiary">Domain Info</button>
-  <button id="historyBtn" class="btn tertiary">History</button>
+  <div class="button-row primary-buttons">
+    <button id="summarizeBtn" class="btn primary">Summarize</button>
+  </div>
+  <div class="button-column secondary-buttons">
+    <button id="summarizeSelectionBtn" class="btn secondary">Summarize Selection</button>
+    <button id="biasBtn" class="btn secondary">Analyze Bias</button>
+    <button id="removeAdsBtn" class="btn secondary">Remove Ads</button>
+    <button id="checkCookiesBtn" class="btn secondary">Manage Cookies</button>
+    <button id="savePageBtn" class="btn secondary">Save Page</button>
+  </div>
+  <div class="button-row tertiary-buttons">
+    <button id="saveKeyBtn" class="btn tertiary">Save Key</button>
+    <button id="detectFrameworkBtn" class="btn tertiary">Detect Framework</button>
+    <button id="lookupBtn" class="btn tertiary">Domain Info</button>
+    <button id="historyBtn" class="btn tertiary">History</button>
+  </div>
 
   <!-- The popup script handles button actions -->
   <script src="popup.js"></script>
