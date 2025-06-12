@@ -79,6 +79,7 @@ body {
   display: flex;
   gap: 4px;
   margin-bottom: 4px;
+  justify-content: center;
 }
 
 .button-column {
