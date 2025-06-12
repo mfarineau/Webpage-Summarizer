@@ -87,7 +87,7 @@ body {
   flex-direction: column;
   gap: 4px;
   width: max-content;
-  margin-bottom: 4px;
+  margin: 4px;
 }
 
 /* Primary action button */
