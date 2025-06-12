@@ -78,7 +78,6 @@ body {
 .button-row {
   display: flex;
   gap: 4px;
-  width: max-content;
   margin-bottom: 4px;
 }
 
