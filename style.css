@@ -78,7 +78,7 @@ body {
 .button-row {
   display: flex;
   gap: 4px;
-  margin-bottom: 4px;
+  margin: 4px;
   justify-content: center;
 }
 
