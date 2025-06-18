@@ -21,3 +21,7 @@ Press the **Analyze Bias** button to check if a news article leans left, right o
 ## Bypass JavaScript
 
 Click the **Bypass** button to reload the current page with JavaScript disabled. This can help access content that normally requires scripts to run.
+
+## Enable JavaScript
+
+Use the **Enable JS** button to restore scripting. The page is reloaded with JavaScript allowed again.

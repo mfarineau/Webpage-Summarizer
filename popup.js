@@ -80,6 +80,20 @@ document.getElementById('bypassBtn').addEventListener('click', async () => {
   }
 });
 
+// Reload the page with JavaScript enabled
+document.getElementById('enableJsBtn').addEventListener('click', async () => {
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  try {
+    const url = new URL(tab.url);
+    const pattern = `${url.origin}/*`;
+    chrome.contentSettings.javascript.set({ primaryPattern: pattern, setting: 'allow' }, () => {
+      chrome.tabs.reload(tab.id);
+    });
+  } catch (err) {
+    alert('Unable to enable JavaScript for this page.');
+  }
+});
+
 // Simple descriptions for common tracking cookies
 function getCookieDescription(name) {
   const lower = name.toLowerCase();
