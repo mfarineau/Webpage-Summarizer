@@ -93,6 +93,7 @@ body {
 /* Primary action button */
 .btn.primary {
   background-color: #6200ee;
+  padding:10px;
 }
 .btn.primary:hover {
   background-color: #3700b3;
