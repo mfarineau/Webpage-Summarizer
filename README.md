@@ -17,3 +17,7 @@ Use the **Manage Cookies** button in the popup to view common tracking cookies s
 ## Bias Analysis
 
 Press the **Analyze Bias** button to check if a news article leans left, right or is neutral. The extension queries OpenAI for a short explanation and lists any indicators of bias. It now also researches the article's author, reviewing up to 25 recent pieces by that writer and reporting the author's overall political leaning when possible.
+
+## Bypass JavaScript
+
+Click the **Bypass** button to reload the current page with JavaScript disabled. This can help access content that normally requires scripts to run.

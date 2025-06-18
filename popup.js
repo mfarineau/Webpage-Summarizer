@@ -66,6 +66,20 @@ document.getElementById('savePageBtn').addEventListener('click', async () => {
   chrome.tabs.sendMessage(tab.id, { action: 'save_page' });
 });
 
+// Reload the page with JavaScript disabled
+document.getElementById('bypassBtn').addEventListener('click', async () => {
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  try {
+    const url = new URL(tab.url);
+    const pattern = `${url.origin}/*`;
+    chrome.contentSettings.javascript.set({ primaryPattern: pattern, setting: 'block' }, () => {
+      chrome.tabs.reload(tab.id);
+    });
+  } catch (err) {
+    alert('Unable to disable JavaScript for this page.');
+  }
+});
+
 // Simple descriptions for common tracking cookies
 function getCookieDescription(name) {
   const lower = name.toLowerCase();
