@@ -225,3 +225,12 @@ document.getElementById('historyBtn').addEventListener('click', () => {
     chrome.tabs.create({ url: chrome.runtime.getURL('history.html') });
   }
 });
+
+// Toggle visibility of the additional actions
+const toggleMoreBtn = document.getElementById('toggleMoreBtn');
+const moreActions = document.getElementById('moreActions');
+
+toggleMoreBtn.addEventListener('click', () => {
+  moreActions.hidden = !moreActions.hidden;
+  toggleMoreBtn.classList.toggle('expanded', !moreActions.hidden);
+});

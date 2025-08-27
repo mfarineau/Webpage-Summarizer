@@ -22,27 +22,70 @@
     </select>
   </div>
 
-  <!-- Buttons ordered by importance -->
-  <div class="button-row primary-buttons">
-    <button id="summarizeBtn" class="btn primary">Summarize</button>
-  </div>
-  <div class="button-row secondary-buttons">
-    <button id="summarizeSelectionBtn" class="btn secondary">Summarize Selection</button>
-    <button id="biasBtn" class="btn secondary">Analyze Bias</button>
-    <button id="removeAdsBtn" class="btn secondary">Remove Ads</button>
-    <button id="checkCookiesBtn" class="btn secondary">Manage Cookies</button>
-    <button id="savePageBtn" class="btn secondary">Save Page</button>
-    <button id="bypassBtn" class="btn secondary">Bypass</button>
-  </div>
-  <div class="button-row tertiary-buttons">
-    <button id="saveKeyBtn" class="btn tertiary">Save Key</button>
-    <button id="detectFrameworkBtn" class="btn tertiary">Detect Framework</button>
-    <button id="lookupBtn" class="btn tertiary">Domain Info</button>
-    <button id="historyBtn" class="btn tertiary">History</button>
-    <button id="enableJsBtn" class="btn tertiary">Enable JS</button>
+  <!-- Primary action -->
+  <div class="actions">
+    <button id="summarizeBtn" class="btn primary action-item">
+      <svg viewBox="0 0 24 24"><path d="M4 4h16v2H4zm0 4h16v2H4zm0 4h10v2H4z"/></svg>
+      <span>Summarize</span>
+    </button>
+
+    <!-- Toggle for more actions -->
+    <button id="toggleMoreBtn" class="btn tertiary action-item">
+      <svg viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>
+      <span>More Actions</span>
+    </button>
+
+    <!-- Collapsible more actions section -->
+    <div id="moreActions" class="actions" hidden>
+      <button id="summarizeSelectionBtn" class="btn secondary action-item">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/></svg>
+        <span>Summarize Selection</span>
+      </button>
+      <button id="biasBtn" class="btn secondary action-item">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/></svg>
+        <span>Analyze Bias</span>
+      </button>
+      <button id="removeAdsBtn" class="btn secondary action-item">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/></svg>
+        <span>Remove Ads</span>
+      </button>
+      <button id="checkCookiesBtn" class="btn secondary action-item">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/></svg>
+        <span>Manage Cookies</span>
+      </button>
+      <button id="savePageBtn" class="btn secondary action-item">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/></svg>
+        <span>Save Page</span>
+      </button>
+      <button id="bypassBtn" class="btn secondary action-item">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/></svg>
+        <span>Bypass</span>
+      </button>
+      <button id="saveKeyBtn" class="btn tertiary action-item">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/></svg>
+        <span>Save Key</span>
+      </button>
+      <button id="detectFrameworkBtn" class="btn tertiary action-item">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/></svg>
+        <span>Detect Framework</span>
+      </button>
+      <button id="lookupBtn" class="btn tertiary action-item">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/></svg>
+        <span>Domain Info</span>
+      </button>
+      <button id="historyBtn" class="btn tertiary action-item">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/></svg>
+        <span>History</span>
+      </button>
+      <button id="enableJsBtn" class="btn tertiary action-item">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/></svg>
+        <span>Enable JS</span>
+      </button>
+    </div>
   </div>
 
   <!-- The popup script handles button actions -->
   <script src="popup.js"></script>
 </body>
 </html>
+
