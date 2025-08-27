@@ -91,6 +91,35 @@ body {
   margin: 4px;
 }
 
+/* Container for action buttons */
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Individual action buttons contain an icon and label */
+.action-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  height: 44px;
+}
+
+.action-item svg {
+  width: 20px;
+  height: 20px;
+}
+
+#toggleMoreBtn svg {
+  transition: transform 0.2s;
+}
+
+#toggleMoreBtn.expanded svg {
+  transform: rotate(180deg);
+}
+
 /* Primary action button */
 .btn.primary {
   background-color: #6200ee;
