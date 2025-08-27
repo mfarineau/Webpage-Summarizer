@@ -10,11 +10,26 @@ document.addEventListener('DOMContentLoaded', () => {
     history.forEach((item, idx) => {
       const li = document.createElement('li');
       li.className = 'history-item';
-      li.innerHTML = `
-        <div><a href="${item.url}" target="_blank">${item.url}</a> - ${new Date(item.timestamp).toLocaleString()}</div>
-        <div>${item.summary}</div>
-        <button data-index="${idx}" class="btn tertiary">Delete</button>
-      `;
+
+      const topDiv = document.createElement('div');
+      const link = document.createElement('a');
+      link.href = item.url;
+      link.target = '_blank';
+      link.textContent = item.url;
+      topDiv.appendChild(link);
+      topDiv.appendChild(document.createTextNode(` - ${new Date(item.timestamp).toLocaleString()}`));
+
+      const summaryDiv = document.createElement('div');
+      summaryDiv.textContent = item.summary;
+
+      const delBtn = document.createElement('button');
+      delBtn.dataset.index = idx;
+      delBtn.className = 'btn tertiary';
+      delBtn.textContent = 'Delete';
+
+      li.appendChild(topDiv);
+      li.appendChild(summaryDiv);
+      li.appendChild(delBtn);
       list.appendChild(li);
     });
   }
@@ -28,11 +43,26 @@ document.addEventListener('DOMContentLoaded', () => {
       const blob = new Blob([item.content], { type: 'text/html' });
       const viewUrl = URL.createObjectURL(blob);
 
-      li.innerHTML = `
-        <div><a href="${item.url}" target="_blank">${item.url}</a> - ${new Date(item.timestamp).toLocaleString()}</div>
-        <iframe src="${viewUrl}" class="saved-page-frame"></iframe>
-        <button data-index="${idx}" class="btn tertiary delete">Delete</button>
-      `;
+      const topDiv = document.createElement('div');
+      const link = document.createElement('a');
+      link.href = item.url;
+      link.target = '_blank';
+      link.textContent = item.url;
+      topDiv.appendChild(link);
+      topDiv.appendChild(document.createTextNode(` - ${new Date(item.timestamp).toLocaleString()}`));
+
+      const iframe = document.createElement('iframe');
+      iframe.src = viewUrl;
+      iframe.className = 'saved-page-frame';
+
+      const delBtn = document.createElement('button');
+      delBtn.dataset.index = idx;
+      delBtn.className = 'btn tertiary delete';
+      delBtn.textContent = 'Delete';
+
+      li.appendChild(topDiv);
+      li.appendChild(iframe);
+      li.appendChild(delBtn);
       pageList.appendChild(li);
     });
   }

@@ -83,9 +83,14 @@ async function injectSummaryWidget(selectionText, tone = 'Executive') {
   // This element will hold the summary text returned from the API.
   // We start with a placeholder while the request is in flight.
   const content = document.createElement('div');
-  content.innerHTML = '<p><em>Summarizing...</em></p>';
   content.id = 'summary-content';
   content.style = 'line-height: 1.5; font-size: 14px; margin-top: 8px; color: #222;';
+
+  const loadingP = document.createElement('p');
+  const loadingEm = document.createElement('em');
+  loadingEm.textContent = 'Summarizing...';
+  loadingP.appendChild(loadingEm);
+  content.appendChild(loadingP);
 
   // Grab a few images from the page to display alongside the summary
   const imagesContainer = document.createElement('div');
@@ -179,7 +184,7 @@ async function injectSummaryWidget(selectionText, tone = 'Executive') {
     // Fetch the summary and update the widget with the formatted text
     const summary = await fetchSummary(pageText, openai_api_key, tone);
     const formatted = formatSummary(summary);
-    content.innerHTML = formatted;
+    content.replaceChildren(formatted);
   });
 }
 
@@ -221,8 +226,13 @@ async function injectBiasWidget() {
   `;
 
   const content = document.createElement('div');
-  content.innerHTML = '<p><em>Analyzing...</em></p>';
   content.style = 'line-height: 1.5; font-size: 14px; margin-top: 8px; color: #222;';
+
+  const analyzingP = document.createElement('p');
+  const analyzingEm = document.createElement('em');
+  analyzingEm.textContent = 'Analyzing...';
+  analyzingP.appendChild(analyzingEm);
+  content.appendChild(analyzingP);
 
   const copyBtn = document.createElement('button');
   copyBtn.innerText = 'Copy';
@@ -292,7 +302,7 @@ async function injectBiasWidget() {
 
     const analysis = await fetchBias(pageText, openai_api_key, author);
     const formatted = formatSummary(analysis);
-    content.innerHTML = formatted;
+    content.replaceChildren(formatted);
   });
 }
 
@@ -392,27 +402,31 @@ function getSystemPrompt(tone) {
 // simple HTML. This allows us to keep sections and bullet points looking
 // nice inside the widget.
 function formatSummary(text) {
-  // Split the text into paragraphs whenever there are two or more new lines.
+  const fragment = document.createDocumentFragment();
+
   const paragraphs = text
     .split(/\n{2,}/)
     .map(p => p.trim())
     .filter(p => p.length > 0);
 
-  const formatted = paragraphs.map(p => {
+  paragraphs.forEach(p => {
     if (/^(Summary|Takeaways|Conclusion|Key Points|Introduction)/i.test(p)) {
-      // Section headings become <h4> elements
-      return `<h4>${p}</h4>`;
+      const h4 = document.createElement('h4');
+      h4.textContent = p;
+      fragment.appendChild(h4);
     } else if (/^(\d+[\.\)]|[-•])\s+/.test(p)) {
-      // Bullet or numbered list item – indent slightly
-      return `<p style="margin-left: 10px;">${p}</p>`;
+      const para = document.createElement('p');
+      para.style.marginLeft = '10px';
+      para.textContent = p;
+      fragment.appendChild(para);
     } else {
-      // Regular paragraph
-      return `<p>${p}</p>`;
+      const para = document.createElement('p');
+      para.textContent = p;
+      fragment.appendChild(para);
     }
   });
 
-  // Join the array back together as a single HTML string
-  return formatted.join('\n');
+  return fragment;
 }
 
 // Save the current page's HTML (minus ads) to local storage for later viewing
