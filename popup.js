@@ -126,7 +126,18 @@ function showCookieModal(cookies) {
   const list = document.createElement('ul');
   cookies.forEach(c => {
     const li = document.createElement('li');
-    li.innerHTML = `<strong>${c.name}</strong><br><small>${getCookieDescription(c.name)}</small>`;
+    const nameEl = document.createElement('strong');
+    nameEl.textContent = c.name;
+
+    const br = document.createElement('br');
+
+    const descEl = document.createElement('small');
+    descEl.textContent = getCookieDescription(c.name);
+
+    li.appendChild(nameEl);
+    li.appendChild(br);
+    li.appendChild(descEl);
+
     list.appendChild(li);
   });
   modal.appendChild(list);
