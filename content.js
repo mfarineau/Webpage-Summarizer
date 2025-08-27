@@ -38,38 +38,29 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   return false;
 });
 
-// Creates and displays the summary widget on the current page.
-// The widget fetches text from the page, calls the OpenAI API and then
-// displays the result to the user.
-async function injectSummaryWidget(selectionText, tone = 'Executive') {
-  // Remove any previous widget so we only have one instance.
-  const old = document.getElementById('summary-widget');
-  if (old) old.remove();
-
-  // Build the outer container that will hold the summary text and close button
+// Build a floating widget with shared styling, controls and drag support.
+function createFloatingWidget(titleText, maxHeight = '70vh') {
   const container = document.createElement('div');
-  container.id = 'summary-widget';
   container.style = `
-    position: fixed;        /* stay fixed in the corner */
+    position: fixed;
     bottom: 20px;
     right: 20px;
     width: 420px;
-    max-height: 70vh;       /* don't grow beyond 70% of viewport height */
+    max-height: ${maxHeight};
     background: #fff;
     box-shadow: 0 4px 12px rgba(0,0,0,0.15);
     border-radius: 8px;
     padding: 16px;
     font-family: Roboto, Arial, sans-serif;
-    z-index: 999999;        /* appear on top of most things */
-    overflow: auto;         /* scroll if the summary is long */
-    resize: both;           /* allow manual resizing */
+    z-index: 999999;
+    overflow: auto;
+    resize: both;
     left: auto;
     top: auto;
   `;
 
-  // A simple title for the widget so users know what they're looking at
   const title = document.createElement('div');
-  title.innerText = '🧠 Webpage Summary';
+  title.innerText = titleText;
   title.style = `
     font-weight: 500;
     margin: -16px -16px 12px -16px;
@@ -78,35 +69,12 @@ async function injectSummaryWidget(selectionText, tone = 'Executive') {
     background: #6200ee;
     color: #fff;
     border-radius: 8px 8px 0 0;
+    cursor: move;
   `;
 
-  // This element will hold the summary text returned from the API.
-  // We start with a placeholder while the request is in flight.
   const content = document.createElement('div');
-  content.id = 'summary-content';
   content.style = 'line-height: 1.5; font-size: 14px; margin-top: 8px; color: #222;';
 
-  const loadingP = document.createElement('p');
-  const loadingEm = document.createElement('em');
-  loadingEm.textContent = 'Summarizing...';
-  loadingP.appendChild(loadingEm);
-  content.appendChild(loadingP);
-
-  // Grab a few images from the page to display alongside the summary
-  const imagesContainer = document.createElement('div');
-  imagesContainer.style = 'display:flex; gap:6px; margin-bottom:12px; overflow-x:auto;';
-  const imgUrls = Array.from(document.querySelectorAll('img'))
-    .map(img => img.currentSrc || img.src)
-    .filter(src => src && !src.startsWith('data:'))
-    .slice(0, 3);
-  imgUrls.forEach(url => {
-    const imgEl = document.createElement('img');
-    imgEl.src = url;
-    imgEl.style = 'max-height:80px; border-radius:4px;';
-    imagesContainer.appendChild(imgEl);
-  });
-
-  // Button allowing users to copy the summary text to the clipboard
   const copyBtn = document.createElement('button');
   copyBtn.innerText = 'Copy';
   copyBtn.style = `
@@ -121,7 +89,6 @@ async function injectSummaryWidget(selectionText, tone = 'Executive') {
   `;
   copyBtn.onclick = () => navigator.clipboard.writeText(content.innerText);
 
-  // Users can dismiss the summary widget with this button
   const close = document.createElement('button');
   close.innerText = 'Dismiss';
   close.style = `
@@ -136,16 +103,12 @@ async function injectSummaryWidget(selectionText, tone = 'Executive') {
   `;
   close.onclick = () => container.remove();
 
-  // Assemble the widget and insert it into the page
   container.appendChild(title);
-  container.appendChild(imagesContainer);
   container.appendChild(content);
   container.appendChild(copyBtn);
   container.appendChild(close);
   document.body.appendChild(container);
 
-  // Allow the widget to be dragged by its title bar
-  title.style.cursor = 'move';
   title.addEventListener('mousedown', (e) => {
     e.preventDefault();
     const rect = container.getBoundingClientRect();
@@ -167,6 +130,45 @@ async function injectSummaryWidget(selectionText, tone = 'Executive') {
     document.addEventListener('mousemove', onMove);
     document.addEventListener('mouseup', onUp);
   });
+
+  return { container, content };
+}
+
+// Creates and displays the summary widget on the current page.
+// The widget fetches text from the page, calls the OpenAI API and then
+// displays the result to the user.
+async function injectSummaryWidget(selectionText, tone = 'Executive') {
+  // Remove any previous widget so we only have one instance.
+  const old = document.getElementById('summary-widget');
+  if (old) old.remove();
+
+  // Build the widget container using the shared helper
+  const { container, content } = createFloatingWidget('🧠 Webpage Summary', '70vh');
+  container.id = 'summary-widget';
+  content.id = 'summary-content';
+
+  const loadingP = document.createElement('p');
+  const loadingEm = document.createElement('em');
+  loadingEm.textContent = 'Summarizing...';
+  loadingP.appendChild(loadingEm);
+  content.appendChild(loadingP);
+
+  // Grab a few images from the page to display alongside the summary
+  const imagesContainer = document.createElement('div');
+  imagesContainer.style = 'display:flex; gap:6px; margin-bottom:12px; overflow-x:auto;';
+  const imgUrls = Array.from(document.querySelectorAll('img'))
+    .map(img => img.currentSrc || img.src)
+    .filter(src => src && !src.startsWith('data:'))
+    .slice(0, 3);
+  imgUrls.forEach(url => {
+    const imgEl = document.createElement('img');
+    imgEl.src = url;
+    imgEl.style = 'max-height:80px; border-radius:4px;';
+    imagesContainer.appendChild(imgEl);
+  });
+
+  // Insert images container before the content area
+  container.insertBefore(imagesContainer, content);
 
   // Grab the text to summarize. If a specific selection was provided use that,
   // otherwise fall back to the full page text.
@@ -192,104 +194,14 @@ async function injectSummaryWidget(selectionText, tone = 'Executive') {
 async function injectBiasWidget() {
   const old = document.getElementById('bias-widget');
   if (old) old.remove();
-
-  const container = document.createElement('div');
+  const { container, content } = createFloatingWidget('📰 Bias Analysis', '50vh');
   container.id = 'bias-widget';
-  container.style = `
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    width: 420px;
-    max-height: 50vh;
-    background: #fff;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    border-radius: 8px;
-    padding: 16px;
-    font-family: Roboto, Arial, sans-serif;
-    z-index: 999999;
-    overflow: auto;
-    resize: both;
-    left: auto;
-    top: auto;
-  `;
-
-  const title = document.createElement('div');
-  title.innerText = '📰 Bias Analysis';
-  title.style = `
-    font-weight: 500;
-    margin: -16px -16px 12px -16px;
-    font-size: 1.1rem;
-    padding: 8px 12px;
-    background: #6200ee;
-    color: #fff;
-    border-radius: 8px 8px 0 0;
-  `;
-
-  const content = document.createElement('div');
-  content.style = 'line-height: 1.5; font-size: 14px; margin-top: 8px; color: #222;';
 
   const analyzingP = document.createElement('p');
   const analyzingEm = document.createElement('em');
   analyzingEm.textContent = 'Analyzing...';
   analyzingP.appendChild(analyzingEm);
   content.appendChild(analyzingP);
-
-  const copyBtn = document.createElement('button');
-  copyBtn.innerText = 'Copy';
-  copyBtn.style = `
-    margin-top: 8px;
-    width: 100%;
-    background: #6200ee;
-    color: #fff;
-    border: none;
-    border-radius: 4px;
-    padding: 8px 12px;
-    cursor: pointer;
-  `;
-  copyBtn.onclick = () => navigator.clipboard.writeText(content.innerText);
-
-  const close = document.createElement('button');
-  close.innerText = 'Dismiss';
-  close.style = `
-    margin-top: 12px;
-    width: 100%;
-    background: #6200ee;
-    color: #fff;
-    border: none;
-    border-radius: 4px;
-    padding: 8px 12px;
-    cursor: pointer;
-  `;
-  close.onclick = () => container.remove();
-
-  container.appendChild(title);
-  container.appendChild(content);
-  container.appendChild(copyBtn);
-  container.appendChild(close);
-  document.body.appendChild(container);
-
-  title.style.cursor = 'move';
-  title.addEventListener('mousedown', (e) => {
-    e.preventDefault();
-    const rect = container.getBoundingClientRect();
-    const offsetX = e.clientX - rect.left;
-    const offsetY = e.clientY - rect.top;
-
-    function onMove(ev) {
-      container.style.left = `${ev.clientX - offsetX}px`;
-      container.style.top = `${ev.clientY - offsetY}px`;
-      container.style.right = 'auto';
-      container.style.bottom = 'auto';
-    }
-
-    function onUp() {
-      document.removeEventListener('mousemove', onMove);
-      document.removeEventListener('mouseup', onUp);
-    }
-
-    document.addEventListener('mousemove', onMove);
-    document.addEventListener('mouseup', onUp);
-  });
 
   const pageText = document.body.innerText;
   const author = detectAuthor();
