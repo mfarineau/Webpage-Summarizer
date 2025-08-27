@@ -257,3 +257,21 @@ toggleMoreBtn.addEventListener('click', () => {
   moreActions.hidden = !moreActions.hidden;
   toggleMoreBtn.classList.toggle('expanded', !moreActions.hidden);
 });
+
+// Switch between grouped extra features
+const segmentButtons = document.querySelectorAll('.segmented-control .segment');
+const groups = {
+  analysis: document.getElementById('analysisGroup'),
+  utilities: document.getElementById('utilitiesGroup'),
+  settings: document.getElementById('settingsGroup')
+};
+
+segmentButtons.forEach(btn => {
+  btn.addEventListener('click', () => {
+    segmentButtons.forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    Object.keys(groups).forEach(key => {
+      groups[key].hidden = key !== btn.dataset.group;
+    });
+  });
+});

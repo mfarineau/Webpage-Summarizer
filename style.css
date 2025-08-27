@@ -190,6 +190,35 @@ body {
 .btn.tertiary:hover {
   background-color: rgba(224, 224, 224, 0.4);
 }
+
+/* Segmented control to group extra features */
+.segmented-control {
+  display: flex;
+  margin-bottom: 8px;
+}
+
+.segmented-control .segment {
+  flex: 1;
+  padding: 6px 0;
+  border: 1px solid var(--border-color);
+  background: var(--tertiary-color);
+  color: var(--text-color);
+  cursor: pointer;
+  font-size: 0.875rem;
+}
+
+.segmented-control .segment + .segment {
+  border-left: none;
+}
+
+.segmented-control .segment.active {
+  background: var(--accent-color);
+  color: var(--button-text-color);
+}
+
+.action-group {
+  margin-top: 8px;
+}
 /* History page container */
 /* History list styling */
 .history-list {
