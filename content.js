@@ -250,8 +250,12 @@ async function fetchSummary(text, apiKey, tone = 'Executive') {
 
     // The API returns an object with an array of choices. We take the first
     // choice's message content as our summary.
-    const data = await response.json();
-    summary = data.choices?.[0]?.message?.content || '❌ No summary returned.';
+    if (!response.ok) {
+      summary = `❌ Error fetching summary. (${response.status})`;
+    } else {
+      const data = await response.json();
+      summary = data.choices?.[0]?.message?.content || '❌ No summary returned.';
+    }
   } catch (err) {
     // Handle errors such as network failures or invalid API keys
     summary = '❌ Error fetching summary.';
@@ -296,6 +300,9 @@ async function fetchBias(text, apiKey, author = '') {
       }),
     });
 
+    if (!response.ok) {
+      return `❌ Error analyzing bias. (${response.status})`;
+    }
     const data = await response.json();
     return data.choices?.[0]?.message?.content || '❌ No analysis returned.';
   } catch (err) {
