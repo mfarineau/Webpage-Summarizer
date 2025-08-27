@@ -57,8 +57,8 @@ function createFloatingWidget(titleText, maxHeight = '70vh') {
     resize: both;
     left: auto;
     top: auto;
-    font-size: 14px;
-    line-height: 1.5;
+    font-size: 1rem;
+    line-height: 1.25;
     color: #222;
   `;
 
@@ -76,7 +76,7 @@ function createFloatingWidget(titleText, maxHeight = '70vh') {
   `;
 
   const content = document.createElement('div');
-  content.style = 'line-height: 1.5; font-size: 14px; margin-top: 8px; color: #222;';
+  content.style = 'line-height: 1.25; font-size: 1rem; margin-top: 8px; color: #222;';
 
   const copyBtn = document.createElement('button');
   copyBtn.innerText = 'Copy';

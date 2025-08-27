@@ -112,7 +112,8 @@ body {
   cursor: pointer;
   border-radius: 12px;
   transition: background-color 0.2s;
-  font-size: 0.875rem;
+  font-size: 1rem;
+  line-height: 1.25;
   width: 100%;
   -webkit-backdrop-filter: blur(4px);
   backdrop-filter: blur(4px);
@@ -204,7 +205,8 @@ body {
   background: var(--tertiary-color);
   color: var(--text-color);
   cursor: pointer;
-  font-size: 0.875rem;
+  font-size: 1rem;
+  line-height: 1.25;
 }
 
 .segmented-control .segment + .segment {
