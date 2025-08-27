@@ -102,7 +102,7 @@ body {
 
 /* Generic button style used for all buttons in the popup */
 .btn {
-  border: none;
+  border: 1px solid rgba(255, 255, 255, 0.4);
   color: var(--button-text-color);
   padding: 6px 12px;
   text-align: center;
@@ -110,10 +110,13 @@ body {
   display: inline-block;
   margin: 0;
   cursor: pointer;
-  border-radius: 4px;
+  border-radius: 12px;
   transition: background-color 0.2s;
   font-size: 0.875rem;
-  width:100%
+  width: 100%;
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 /* Layout helpers for popup buttons */
@@ -163,28 +166,28 @@ body {
 
 /* Primary action button */
 .btn.primary {
-  background-color: var(--accent-color);
-  padding:10px;
+  background-color: rgba(98, 0, 238, 0.25);
+  padding: 10px;
 }
 .btn.primary:hover {
-  background-color: var(--accent-color-hover);
+  background-color: rgba(98, 0, 238, 0.4);
 }
 
 /* Secondary actions */
 .btn.secondary {
-  background-color: var(--secondary-color);
+  background-color: rgba(158, 158, 158, 0.25);
 }
 .btn.secondary:hover {
-  background-color: var(--secondary-color-hover);
+  background-color: rgba(158, 158, 158, 0.4);
 }
 
 /* Tertiary actions */
 .btn.tertiary {
-  background-color: var(--tertiary-color);
+  background-color: rgba(224, 224, 224, 0.25);
   color: var(--text-color);
 }
 .btn.tertiary:hover {
-  background-color: var(--tertiary-color-hover);
+  background-color: rgba(224, 224, 224, 0.4);
 }
 /* History page container */
 /* History list styling */
