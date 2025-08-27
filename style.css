@@ -18,27 +18,18 @@ body {
   font-size: 1.25rem;
 }
 
-/* Styles for the API key input box */
-.input-field input {
-  border: none;
-  border-bottom: 1px solid #9e9e9e;
-  width: 100%;
-  padding: 4px 0 8px 0;
-  box-sizing: border-box;
-  outline: none;
-  transition: border-bottom-color 0.3s;
-  background: transparent;
-}
-
-/* Dropdown styling matches the input field */
+/* Styles for the API key input box and dropdown */
+.input-field input,
 .input-field select {
-  border: none;
-  border-bottom: 1px solid #9e9e9e;
   width: 100%;
-  padding: 4px 0 8px 0;
+  padding: 8px 12px;
   box-sizing: border-box;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(10px);
   outline: none;
-  background: transparent;
+  transition: box-shadow 0.3s;
 }
 
 /* Background indicates whether an API key is stored */
@@ -50,13 +41,10 @@ body {
   background-color: #f8d7da; /* light red */
 }
 
-/* Highlight the bottom border when the input is focused */
-.input-field input:focus {
-  border-bottom: 2px solid #6200ee;
-}
-
+/* Highlight the input or dropdown when focused */
+.input-field input:focus,
 .input-field select:focus {
-  border-bottom: 2px solid #6200ee;
+  box-shadow: 0 0 0 2px rgba(0, 122, 255, 0.4);
 }
 
 /* Generic button style used for all buttons in the popup */
