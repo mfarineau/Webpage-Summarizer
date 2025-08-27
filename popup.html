@@ -37,50 +37,64 @@
 
     <!-- Collapsible more actions section -->
     <div id="moreActions" class="actions" hidden>
-      <button id="summarizeSelectionBtn" class="btn secondary action-item">
-        <svg class="icon"><use href="sf-symbols.svg#text.badge.plus"/></svg>
-        <span>Summarize Selection</span>
-      </button>
-      <button id="biasBtn" class="btn secondary action-item">
-        <svg class="icon"><use href="sf-symbols.svg#chart.bar"/></svg>
-        <span>Analyze Bias</span>
-      </button>
-      <button id="removeAdsBtn" class="btn secondary action-item">
-        <svg class="icon"><use href="sf-symbols.svg#eye.slash"/></svg>
-        <span>Remove Ads</span>
-      </button>
-      <button id="checkCookiesBtn" class="btn secondary action-item">
-        <svg class="icon"><use href="sf-symbols.svg#checkmark.shield"/></svg>
-        <span>Manage Cookies</span>
-      </button>
-      <button id="savePageBtn" class="btn secondary action-item">
-        <svg class="icon"><use href="sf-symbols.svg#square.and.arrow.down"/></svg>
-        <span>Save Page</span>
-      </button>
-      <button id="bypassBtn" class="btn secondary action-item">
-        <svg class="icon"><use href="sf-symbols.svg#arrowshape.turn.up.right"/></svg>
-        <span>Bypass</span>
-      </button>
-      <button id="saveKeyBtn" class="btn tertiary action-item">
-        <svg class="icon"><use href="sf-symbols.svg#key"/></svg>
-        <span>Save Key</span>
-      </button>
-      <button id="detectFrameworkBtn" class="btn tertiary action-item">
-        <svg class="icon"><use href="sf-symbols.svg#cpu"/></svg>
-        <span>Detect Framework</span>
-      </button>
-      <button id="lookupBtn" class="btn tertiary action-item">
-        <svg class="icon"><use href="sf-symbols.svg#globe"/></svg>
-        <span>Domain Info</span>
-      </button>
-      <button id="historyBtn" class="btn tertiary action-item">
-        <svg class="icon"><use href="sf-symbols.svg#clock.arrow.circlepath"/></svg>
-        <span>History</span>
-      </button>
-      <button id="enableJsBtn" class="btn tertiary action-item">
-        <svg class="icon"><use href="sf-symbols.svg#curlybraces"/></svg>
-        <span>Enable JS</span>
-      </button>
+      <div class="segmented-control">
+        <button class="segment active" data-group="analysis">Analysis</button>
+        <button class="segment" data-group="utilities">Utilities</button>
+        <button class="segment" data-group="settings">Settings</button>
+      </div>
+
+      <div id="analysisGroup" class="actions action-group">
+        <button id="summarizeSelectionBtn" class="btn secondary action-item">
+          <svg class="icon"><use href="sf-symbols.svg#text.badge.plus"/></svg>
+          <span>Summarize Selection</span>
+        </button>
+        <button id="biasBtn" class="btn secondary action-item">
+          <svg class="icon"><use href="sf-symbols.svg#chart.bar"/></svg>
+          <span>Analyze Bias</span>
+        </button>
+        <button id="detectFrameworkBtn" class="btn tertiary action-item">
+          <svg class="icon"><use href="sf-symbols.svg#cpu"/></svg>
+          <span>Detect Framework</span>
+        </button>
+        <button id="lookupBtn" class="btn tertiary action-item">
+          <svg class="icon"><use href="sf-symbols.svg#globe"/></svg>
+          <span>Domain Info</span>
+        </button>
+      </div>
+
+      <div id="utilitiesGroup" class="actions action-group" hidden>
+        <button id="removeAdsBtn" class="btn secondary action-item">
+          <svg class="icon"><use href="sf-symbols.svg#eye.slash"/></svg>
+          <span>Remove Ads</span>
+        </button>
+        <button id="checkCookiesBtn" class="btn secondary action-item">
+          <svg class="icon"><use href="sf-symbols.svg#checkmark.shield"/></svg>
+          <span>Manage Cookies</span>
+        </button>
+        <button id="savePageBtn" class="btn secondary action-item">
+          <svg class="icon"><use href="sf-symbols.svg#square.and.arrow.down"/></svg>
+          <span>Save Page</span>
+        </button>
+        <button id="bypassBtn" class="btn secondary action-item">
+          <svg class="icon"><use href="sf-symbols.svg#arrowshape.turn.up.right"/></svg>
+          <span>Bypass</span>
+        </button>
+        <button id="historyBtn" class="btn tertiary action-item">
+          <svg class="icon"><use href="sf-symbols.svg#clock.arrow.circlepath"/></svg>
+          <span>History</span>
+        </button>
+        <button id="enableJsBtn" class="btn tertiary action-item">
+          <svg class="icon"><use href="sf-symbols.svg#curlybraces"/></svg>
+          <span>Enable JS</span>
+        </button>
+      </div>
+
+      <div id="settingsGroup" class="actions action-group" hidden>
+        <button id="saveKeyBtn" class="btn tertiary action-item">
+          <svg class="icon"><use href="sf-symbols.svg#key"/></svg>
+          <span>Save Key</span>
+        </button>
+      </div>
     </div>
   </div>
 
