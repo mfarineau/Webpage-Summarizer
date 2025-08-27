@@ -41,7 +41,8 @@
 
 /* Overall styling for the popup window */
 body {
-  font-family: Roboto, Arial, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro', sans-serif;
+  line-height: 1.4;
   padding: 16px;
   margin: 0;
   background-color: var(--glass-surface);
@@ -50,8 +51,9 @@ body {
 
 /* Header text at the top of the popup */
 .title {
-  margin-bottom: 20px;
+  margin-bottom: 24px;
   font-size: 1.25rem;
+  font-weight: 600;
 }
 
 /* Styles for the API key input box */
@@ -260,6 +262,7 @@ body {
   margin-top: 0;
   margin-bottom: 16px;
   font-size: 1.25rem;
+  font-weight: 600;
 }
 
 .modal ul {
