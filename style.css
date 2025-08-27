@@ -121,10 +121,10 @@ body {
 /* History list styling */
 .history-list {
   list-style: none;
-  padding: 0;
+  padding: 12px;
   display: flex;
   flex-wrap: wrap;
-  gap: 16px;
+  gap: 24px;
 }
 .history-container {
   max-width: 800px;
@@ -133,10 +133,12 @@ body {
 
 /* Individual history item styled like a Material card */
 .history-item {
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
   border-radius: 16px;
   padding: 16px;
-  background-color: #fff;
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(15px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
   flex: 1 1 calc(50% - 16px);
   min-width: 250px;
   box-sizing: border-box;
