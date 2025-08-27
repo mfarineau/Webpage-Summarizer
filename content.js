@@ -57,6 +57,9 @@ function createFloatingWidget(titleText, maxHeight = '70vh') {
     resize: both;
     left: auto;
     top: auto;
+    font-size: 14px;
+    line-height: 1.5;
+    color: #222;
   `;
 
   const title = document.createElement('div');

@@ -1,8 +1,0 @@
-// Additional styling that is appended to the summary widget's container.
-// Keeping this snippet in its own file makes it easy to tweak text styling
-// without digging through the content script.
-container.style += `
-  font-size: 14px;
-  line-height: 1.5;
-  color: #222;
-`;
