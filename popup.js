@@ -202,10 +202,18 @@ document.getElementById('lookupBtn').addEventListener('click', async () => {
 
   try {
     const dnsRes = await fetch(`https://dns.google/resolve?name=${domain}&type=A`);
+    if (!dnsRes.ok) {
+      alert('DNS lookup failed.');
+      return;
+    }
     const dnsData = await dnsRes.json();
     const ip = dnsData.Answer?.[0]?.data || 'Unknown';
 
     const whoisRes = await fetch(`https://rdap.org/domain/${domain}`);
+    if (!whoisRes.ok) {
+      alert('WHOIS lookup failed.');
+      return;
+    }
     const whoisData = await whoisRes.json();
     const registrant = (whoisData.entities || []).find(e => (e.roles || []).includes('registrant'));
     const owner = registrant?.vcardArray?.[1]?.find(v => v[0] === 'fn')?.[3] || 'Unknown';
@@ -214,10 +222,14 @@ document.getElementById('lookupBtn').addEventListener('click', async () => {
     if (ip !== 'Unknown') {
       try {
         const ipRes = await fetch(`https://ipinfo.io/${ip}/json`);
-        const ipData = await ipRes.json();
-        hostInfo = ipData.org ? `${ipData.org} (${ipData.country})` : ipData.country || '';
+        if (!ipRes.ok) {
+          alert('IP info lookup failed.');
+        } else {
+          const ipData = await ipRes.json();
+          hostInfo = ipData.org ? `${ipData.org} (${ipData.country})` : ipData.country || '';
+        }
       } catch (err) {
-        hostInfo = '';
+        alert('IP info lookup failed.');
       }
     }
 
