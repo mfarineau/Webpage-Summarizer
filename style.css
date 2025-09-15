@@ -17,8 +17,8 @@
   --button-text-color: #ffffff;
   --border-color: #cccccc;
   --overlay-bg: rgba(0, 0, 0, 0.5);
-  --success-bg: #d4edda;
-  --error-bg: #f8d7da;
+  --success-color: #2e7d32;
+  --error-color: #c62828;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -34,8 +34,8 @@
     --button-text-color: #000000;
     --border-color: #444444;
     --overlay-bg: rgba(0, 0, 0, 0.8);
-    --success-bg: #274a2a;
-    --error-bg: #5a1b1b;
+    --success-color: #81c784;
+    --error-color: #ef9a9a;
   }
 }
 
@@ -60,6 +60,28 @@ body {
   font-weight: 600;
 }
 
+.input-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.field-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.input-with-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.input-with-status input {
+  flex: 1;
+}
+
 /* Styles for the API key input box */
 .input-field input {
   border: none;
@@ -81,15 +103,6 @@ body {
   box-sizing: border-box;
   outline: none;
   background: transparent;
-}
-
-/* Background indicates whether an API key is stored */
-.input-field input.key-stored {
-  background-color: var(--success-bg);
-}
-
-.input-field input.key-missing {
-  background-color: var(--error-bg);
 }
 
 /* Highlight the bottom border when the input is focused */
@@ -120,6 +133,35 @@ body {
   -webkit-backdrop-filter: blur(4px);
   backdrop-filter: blur(4px);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.status-indicator {
+  font-size: 0.75rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+
+.status-indicator::before {
+  font-size: 0.85rem;
+}
+
+.status-indicator.status-saved {
+  color: var(--success-color);
+}
+
+.status-indicator.status-saved::before {
+  content: '✔';
+}
+
+.status-indicator.status-missing {
+  color: var(--error-color);
+}
+
+.status-indicator.status-missing::before {
+  content: '⚠';
 }
 
 /* Layout helpers for popup buttons */
