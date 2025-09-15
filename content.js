@@ -16,7 +16,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (selection.trim()) {
       injectSummaryWidget(selection, message.tone);
     } else {
-      alert('No text selected. Summarizing full page.');
+      showContentNotification('No text selected. Summarizing full page.', 'info');
       injectSummaryWidget(undefined, message.tone);
     }
   } else if (message.action === 'remove_ads') {
@@ -37,6 +37,193 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   // No asynchronous response, so we don't keep the message port open.
   return false;
 });
+
+const CONTENT_TOAST_STYLE_ID = 'webpage-summarizer-toast-styles';
+const CONTENT_TOAST_CONTAINER_ID = 'webpage-summarizer-toast-stack';
+
+const CONTENT_TOAST_STYLES = `
+.ws-toast-stack {
+  position: fixed;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: min(320px, calc(100% - 32px));
+  z-index: 2147483647;
+  pointer-events: none;
+  --ws-toast-bg: rgba(255, 255, 255, 0.95);
+  --ws-toast-border: rgba(0, 0, 0, 0.12);
+  --ws-toast-text: #1b1b1b;
+  --ws-toast-info: #2962ff;
+  --ws-toast-success: #2e7d32;
+  --ws-toast-error: #c62828;
+  --ws-toast-shadow: rgba(0, 0, 0, 0.25);
+}
+
+.ws-toast-stack.ws-toast-stack--page {
+  top: 20px;
+  bottom: auto;
+  right: 24px;
+  left: auto;
+  transform: none;
+  align-items: flex-end;
+  width: min(360px, calc(100% - 32px));
+}
+
+@media (max-width: 600px) {
+  .ws-toast-stack.ws-toast-stack--page {
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%);
+    align-items: center;
+    width: calc(100% - 32px);
+  }
+}
+
+.ws-toast {
+  pointer-events: auto;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  background: var(--ws-toast-bg);
+  color: var(--ws-toast-text);
+  border: 1px solid var(--ws-toast-border);
+  border-left: 4px solid var(--ws-toast-info);
+  border-radius: 12px;
+  box-shadow: 0 12px 32px var(--ws-toast-shadow);
+  padding: 10px 12px;
+  font-size: 14px;
+  line-height: 1.4;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  white-space: pre-line;
+  max-width: min(360px, calc(100vw - 32px));
+}
+
+.ws-toast.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.ws-toast__icon {
+  font-size: 1.2rem;
+  line-height: 1;
+  margin-top: 2px;
+}
+
+.ws-toast__message {
+  flex: 1;
+  white-space: inherit;
+}
+
+.ws-toast--success {
+  border-left-color: var(--ws-toast-success);
+}
+
+.ws-toast--error {
+  border-left-color: var(--ws-toast-error);
+}
+
+.ws-toast--info {
+  border-left-color: var(--ws-toast-info);
+}
+
+@media (prefers-color-scheme: dark) {
+  .ws-toast-stack {
+    --ws-toast-bg: rgba(24, 24, 24, 0.94);
+    --ws-toast-border: rgba(255, 255, 255, 0.16);
+    --ws-toast-text: #f5f5f5;
+    --ws-toast-info: #82b1ff;
+    --ws-toast-success: #81c784;
+    --ws-toast-error: #ef9a9a;
+    --ws-toast-shadow: rgba(0, 0, 0, 0.6);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ws-toast {
+    transition: none;
+  }
+}
+`;
+
+const CONTENT_TOAST_ICONS = {
+  success: '✔',
+  error: '⚠',
+  info: 'ℹ'
+};
+
+function ensureToastStylesInjected() {
+  if (document.getElementById(CONTENT_TOAST_STYLE_ID)) {
+    return;
+  }
+  const style = document.createElement('style');
+  style.id = CONTENT_TOAST_STYLE_ID;
+  style.textContent = CONTENT_TOAST_STYLES;
+  (document.head || document.documentElement).appendChild(style);
+}
+
+function getToastContainer() {
+  let container = document.getElementById(CONTENT_TOAST_CONTAINER_ID);
+  if (!container) {
+    container = document.createElement('div');
+    container.id = CONTENT_TOAST_CONTAINER_ID;
+    container.className = 'ws-toast-stack ws-toast-stack--page';
+    container.setAttribute('aria-live', 'polite');
+    container.setAttribute('aria-atomic', 'false');
+    (document.body || document.documentElement).appendChild(container);
+  }
+  return container;
+}
+
+function showContentNotification(message, type = 'info', duration = 4000) {
+  ensureToastStylesInjected();
+  const container = getToastContainer();
+
+  const toast = document.createElement('div');
+  toast.className = `ws-toast ws-toast--${type}`;
+  toast.setAttribute('role', 'status');
+  toast.setAttribute('aria-live', 'polite');
+
+  const icon = document.createElement('span');
+  icon.className = 'ws-toast__icon';
+  icon.textContent = CONTENT_TOAST_ICONS[type] || CONTENT_TOAST_ICONS.info;
+
+  const text = document.createElement('span');
+  text.className = 'ws-toast__message';
+  text.textContent = message;
+
+  toast.appendChild(icon);
+  toast.appendChild(text);
+  container.appendChild(toast);
+
+  requestAnimationFrame(() => {
+    toast.classList.add('is-visible');
+  });
+
+  const removeToast = () => {
+    if (!toast.isConnected) {
+      return;
+    }
+    toast.classList.remove('is-visible');
+    const finalize = () => {
+      if (toast.isConnected) {
+        toast.remove();
+      }
+    };
+    toast.addEventListener('transitionend', finalize, { once: true });
+    setTimeout(finalize, 200);
+  };
+
+  const timer = setTimeout(removeToast, duration);
+  toast.addEventListener('click', () => {
+    clearTimeout(timer);
+    removeToast();
+  });
+}
 
 // Build a floating widget with shared styling, controls and drag support.
 function createFloatingWidget(titleText, maxHeight = '70vh') {
@@ -368,8 +555,14 @@ function savePage() {
   const entry = { url: location.href, timestamp: Date.now(), content: html };
   chrome.storage.local.get({ page_history: [] }, ({ page_history }) => {
     page_history.push(entry);
-    chrome.storage.local.set({ page_history });
-    alert('Page saved!');
+    chrome.storage.local.set({ page_history }, () => {
+      if (chrome.runtime.lastError) {
+        console.error('Failed to save page to history:', chrome.runtime.lastError);
+        showContentNotification('Failed to save page.', 'error');
+        return;
+      }
+      showContentNotification('Page saved!', 'success');
+    });
   });
 }
 
