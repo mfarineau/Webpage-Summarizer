@@ -8,27 +8,30 @@
 // chrome.storage so it can be accessed by the content script later.
 const apiKeyInput = document.getElementById('apiKeyInput');
 const toneSelect = document.getElementById('toneSelect');
+const apiKeyStatus = document.getElementById('apiKeyStatus');
 
-function updateKeyColor(key) {
+function updateKeyStatus(key) {
   if (key) {
-    apiKeyInput.classList.remove('key-missing');
-    apiKeyInput.classList.add('key-stored');
+    apiKeyStatus.textContent = 'API key saved';
+    apiKeyStatus.classList.add('status-saved');
+    apiKeyStatus.classList.remove('status-missing');
   } else {
-    apiKeyInput.classList.remove('key-stored');
-    apiKeyInput.classList.add('key-missing');
+    apiKeyStatus.textContent = 'API key missing';
+    apiKeyStatus.classList.add('status-missing');
+    apiKeyStatus.classList.remove('status-saved');
   }
 }
 
 chrome.storage.local.get('openai_api_key', ({ openai_api_key }) => {
   apiKeyInput.value = openai_api_key || '';
-  updateKeyColor(openai_api_key);
+  updateKeyStatus(openai_api_key);
 });
 
 document.getElementById('saveKeyBtn').addEventListener('click', () => {
   const key = apiKeyInput.value.trim();
   chrome.storage.local.set({ openai_api_key: key }, () => {
     alert('API Key saved!');
-    updateKeyColor(key);
+    updateKeyStatus(key);
   });
 });
 

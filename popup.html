@@ -12,9 +12,14 @@
 
   <!-- Input field for the user to paste their OpenAI API key -->
   <div class="input-field">
-    <input id="apiKeyInput" type="password" placeholder="OpenAI API Key">
+    <label for="apiKeyInput" class="field-label">OpenAI API Key</label>
+    <div class="input-with-status">
+      <input id="apiKeyInput" type="password" placeholder="OpenAI API Key">
+      <span id="apiKeyStatus" class="status-indicator" role="status" aria-live="polite"></span>
+    </div>
   </div>
   <div class="input-field">
+    <label for="toneSelect" class="field-label">Tone</label>
     <select id="toneSelect">
       <option value="Executive">Executive</option>
       <option value="Bullet Points">Bullet Points</option>
