@@ -9,6 +9,61 @@
 const apiKeyInput = document.getElementById('apiKeyInput');
 const toneSelect = document.getElementById('toneSelect');
 const apiKeyStatus = document.getElementById('apiKeyStatus');
+const toastContainer = document.getElementById('toastContainer');
+
+const TOAST_ICONS = {
+  success: '✔',
+  error: '⚠',
+  info: 'ℹ'
+};
+
+function showToast(message, type = 'info', duration = 4000) {
+  if (!toastContainer) {
+    console.warn('Toast container missing for message:', message);
+    return;
+  }
+
+  const toast = document.createElement('div');
+  toast.className = `ws-toast ws-toast--${type}`;
+  toast.setAttribute('role', 'status');
+  toast.setAttribute('aria-live', 'polite');
+
+  const icon = document.createElement('span');
+  icon.className = 'ws-toast__icon';
+  icon.textContent = TOAST_ICONS[type] || TOAST_ICONS.info;
+
+  const text = document.createElement('span');
+  text.className = 'ws-toast__message';
+  text.textContent = message;
+
+  toast.appendChild(icon);
+  toast.appendChild(text);
+  toastContainer.appendChild(toast);
+
+  requestAnimationFrame(() => {
+    toast.classList.add('is-visible');
+  });
+
+  const removeToast = () => {
+    if (!toast.isConnected) {
+      return;
+    }
+    toast.classList.remove('is-visible');
+    const finalize = () => {
+      if (toast.isConnected) {
+        toast.remove();
+      }
+    };
+    toast.addEventListener('transitionend', finalize, { once: true });
+    setTimeout(finalize, 200);
+  };
+
+  const timer = setTimeout(removeToast, duration);
+  toast.addEventListener('click', () => {
+    clearTimeout(timer);
+    removeToast();
+  });
+}
 
 function updateKeyStatus(key) {
   if (key) {
@@ -30,7 +85,12 @@ chrome.storage.local.get('openai_api_key', ({ openai_api_key }) => {
 document.getElementById('saveKeyBtn').addEventListener('click', () => {
   const key = apiKeyInput.value.trim();
   chrome.storage.local.set({ openai_api_key: key }, () => {
-    alert('API Key saved!');
+    if (chrome.runtime.lastError) {
+      console.error('Failed to save API key:', chrome.runtime.lastError);
+      showToast('Failed to save API key.', 'error');
+      return;
+    }
+    showToast('API Key saved!', 'success');
     updateKeyStatus(key);
   });
 });
@@ -79,7 +139,8 @@ document.getElementById('bypassBtn').addEventListener('click', async () => {
       chrome.tabs.reload(tab.id);
     });
   } catch (err) {
-    alert('Unable to disable JavaScript for this page.');
+    console.error('Unable to disable JavaScript for this page.', err);
+    showToast('Unable to disable JavaScript for this page.', 'error');
   }
 });
 
@@ -93,7 +154,8 @@ document.getElementById('enableJsBtn').addEventListener('click', async () => {
       chrome.tabs.reload(tab.id);
     });
   } catch (err) {
-    alert('Unable to enable JavaScript for this page.');
+    console.error('Unable to enable JavaScript for this page.', err);
+    showToast('Unable to enable JavaScript for this page.', 'error');
   }
 });
 
@@ -165,7 +227,7 @@ function showCookieModal(cookies) {
       chrome.cookies.remove({ url, name: c.name });
     });
     overlay.remove();
-    alert('Tracking cookies deleted.');
+    showToast('Tracking cookies deleted.', 'success');
   });
 
   closeBtn.addEventListener('click', () => overlay.remove());
@@ -179,7 +241,7 @@ document.getElementById('checkCookiesBtn').addEventListener('click', async () =>
     const tracking = cookies.filter(c => trackerPatterns.test(c.name));
 
     if (tracking.length === 0) {
-      alert('No tracking cookies found.');
+      showToast('No tracking cookies found.', 'info');
       return;
     }
 
@@ -188,16 +250,21 @@ document.getElementById('checkCookiesBtn').addEventListener('click', async () =>
 });
 
 // The "Detect Framework" button attempts to identify what CMS or
-// framework the current site is built with and alerts the result.
+// framework the current site is built with and shows the result in a toast.
 document.getElementById('detectFrameworkBtn').addEventListener('click', async () => {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
   chrome.tabs.sendMessage(tab.id, { action: 'detect_framework' }, (response) => {
-    alert(`Framework: ${response || 'Unknown'}`);
+    if (chrome.runtime.lastError) {
+      console.error('Framework detection failed:', chrome.runtime.lastError);
+      showToast('Unable to detect framework on this page.', 'error');
+      return;
+    }
+    showToast(`Framework: ${response || 'Unknown'}`, 'info', 5000);
   });
 });
 
 // The "Domain Info" button attempts to look up DNS and WHOIS data for the
-// current tab's domain and displays a simple alert with the results.
+// current tab's domain and displays the details in a toast notification.
 document.getElementById('lookupBtn').addEventListener('click', async () => {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
   const url = new URL(tab.url);
@@ -206,7 +273,8 @@ document.getElementById('lookupBtn').addEventListener('click', async () => {
   try {
     const dnsRes = await fetch(`https://dns.google/resolve?name=${domain}&type=A`);
     if (!dnsRes.ok) {
-      alert('DNS lookup failed.');
+      console.error('DNS lookup failed with status', dnsRes.status);
+      showToast('DNS lookup failed.', 'error');
       return;
     }
     const dnsData = await dnsRes.json();
@@ -214,7 +282,8 @@ document.getElementById('lookupBtn').addEventListener('click', async () => {
 
     const whoisRes = await fetch(`https://rdap.org/domain/${domain}`);
     if (!whoisRes.ok) {
-      alert('WHOIS lookup failed.');
+      console.error('WHOIS lookup failed with status', whoisRes.status);
+      showToast('WHOIS lookup failed.', 'error');
       return;
     }
     const whoisData = await whoisRes.json();
@@ -226,20 +295,23 @@ document.getElementById('lookupBtn').addEventListener('click', async () => {
       try {
         const ipRes = await fetch(`https://ipinfo.io/${ip}/json`);
         if (!ipRes.ok) {
-          alert('IP info lookup failed.');
+          console.error('IP info lookup failed with status', ipRes.status);
+          showToast('IP info lookup failed.', 'error');
         } else {
           const ipData = await ipRes.json();
           hostInfo = ipData.org ? `${ipData.org} (${ipData.country})` : ipData.country || '';
         }
       } catch (err) {
-        alert('IP info lookup failed.');
+        console.error('IP info lookup failed.', err);
+        showToast('IP info lookup failed.', 'error');
       }
     }
 
     const message = `Domain: ${domain}\nOwner: ${owner}\nIP: ${ip}${hostInfo ? `\nHost: ${hostInfo}` : ''}`;
-    alert(message);
+    showToast(message, 'info', 8000);
   } catch (err) {
-    alert('Failed to lookup domain information.');
+    console.error('Failed to lookup domain information.', err);
+    showToast('Failed to lookup domain information.', 'error');
   }
 });
 
