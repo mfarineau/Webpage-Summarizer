@@ -659,7 +659,28 @@ async function crawlSiteToPdf(startUrl = window.location.href, maxPages = 20) {
       }
 
       const cleanBody = cleanRoot?.querySelector('body');
-      const text = cleanBody?.innerText?.trim() || doc.body?.innerText?.trim() || '';
+      const contentSelectors = 'p, h1, h2, h3, h4, h5, h6, li, blockquote, article, section';
+      let text = '';
+
+      if (cleanBody) {
+        const contentNodes = cleanBody.querySelectorAll(contentSelectors);
+        const parts = [];
+
+        contentNodes.forEach((node) => {
+          const value = node.textContent?.trim();
+          if (value) {
+            parts.push(value);
+          }
+        });
+
+        if (parts.length) {
+          text = parts.join('\n\n');
+        }
+      }
+
+      if (!text) {
+        text = cleanBody?.innerText?.trim() || doc.body?.innerText?.trim() || '';
+      }
 
       crawledPages.push({ url: currentUrl, title, text });
       showContentNotification(`Crawled ${crawledPages.length}/${pageLimit}: ${currentUrl}`, 'info', 2500);
