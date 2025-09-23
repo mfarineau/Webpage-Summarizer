@@ -10,6 +10,7 @@ const apiKeyInput = document.getElementById('apiKeyInput');
 const toneSelect = document.getElementById('toneSelect');
 const apiKeyStatus = document.getElementById('apiKeyStatus');
 const toastContainer = document.getElementById('toastContainer');
+const crawlSiteBtn = document.getElementById('crawlSiteBtn');
 
 const TOAST_ICONS = {
   success: '✔',
@@ -128,6 +129,49 @@ document.getElementById('savePageBtn').addEventListener('click', async () => {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
   chrome.tabs.sendMessage(tab.id, { action: 'save_page' });
 });
+
+if (crawlSiteBtn) {
+  crawlSiteBtn.addEventListener('click', async () => {
+    if (crawlSiteBtn.disabled) {
+      return;
+    }
+
+    crawlSiteBtn.disabled = true;
+    showToast('Starting site PDF crawl…', 'info');
+
+    try {
+      const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+      if (!tab || !tab.id) {
+        throw new Error('No active tab found.');
+      }
+
+      await new Promise((resolve, reject) => {
+        try {
+          chrome.tabs.sendMessage(tab.id, { action: 'crawl_site_pdf' }, (response) => {
+            if (chrome.runtime.lastError) {
+              reject(new Error(chrome.runtime.lastError.message));
+              return;
+            }
+            if (response && response.error) {
+              reject(new Error(response.error));
+              return;
+            }
+            resolve(response);
+          });
+        } catch (err) {
+          reject(err);
+        }
+      });
+
+      showToast('Site PDF download started.', 'success');
+    } catch (err) {
+      console.error('Failed to start site PDF crawl.', err);
+      showToast('Failed to start site PDF download.', 'error');
+    } finally {
+      crawlSiteBtn.disabled = false;
+    }
+  });
+}
 
 // Reload the page with JavaScript disabled
 document.getElementById('bypassBtn').addEventListener('click', async () => {
