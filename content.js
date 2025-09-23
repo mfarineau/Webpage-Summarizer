@@ -615,8 +615,8 @@ async function crawlSiteToPdf(startUrl = window.location.href, maxPages = 20) {
     throw new Error('Unable to determine a valid starting URL for the crawl.');
   }
 
-  const queue = [startHref];
-  const enqueued = new Set(queue);
+  const queue = [{ url: startHref, depth: 0 }];
+  const enqueued = new Set([startHref]);
   const visited = new Set();
   const crawledPages = [];
 
@@ -625,7 +625,7 @@ async function crawlSiteToPdf(startUrl = window.location.href, maxPages = 20) {
   showContentNotification('Starting site crawl for PDF export…', 'info', 3000);
 
   while (queue.length && crawledPages.length < pageLimit) {
-    const currentUrl = queue.shift();
+    const { url: currentUrl, depth: currentDepth } = queue.shift();
     enqueued.delete(currentUrl);
 
     if (visited.has(currentUrl)) {
@@ -689,21 +689,23 @@ async function crawlSiteToPdf(startUrl = window.location.href, maxPages = 20) {
         break;
       }
 
-      doc.querySelectorAll('a[href]').forEach((anchor) => {
-        const href = anchor.getAttribute('href');
-        if (!href) {
-          return;
-        }
-        const normalized = normalizeUrl(href, currentUrl);
-        if (!normalized) {
-          return;
-        }
-        if (visited.has(normalized) || enqueued.has(normalized)) {
-          return;
-        }
-        enqueued.add(normalized);
-        queue.push(normalized);
-      });
+      if (currentDepth < 1) {
+        doc.querySelectorAll('a[href]').forEach((anchor) => {
+          const href = anchor.getAttribute('href');
+          if (!href) {
+            return;
+          }
+          const normalized = normalizeUrl(href, currentUrl);
+          if (!normalized) {
+            return;
+          }
+          if (visited.has(normalized) || enqueued.has(normalized)) {
+            return;
+          }
+          enqueued.add(normalized);
+          queue.push({ url: normalized, depth: currentDepth + 1 });
+        });
+      }
     } catch (error) {
       console.error('Failed to fetch page during crawl:', currentUrl, error);
       showContentNotification(`Failed to crawl ${currentUrl}: ${error.message || error}`, 'error', 4000);
