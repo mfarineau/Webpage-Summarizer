@@ -642,7 +642,24 @@ async function crawlSiteToPdf(startUrl = window.location.href, maxPages = 20) {
       const html = await response.text();
       const doc = parser.parseFromString(html, 'text/html');
       const title = doc.querySelector('title')?.textContent?.trim() || currentUrl;
-      const text = doc.body?.innerText?.trim() || '';
+
+      const cleanRoot = doc.documentElement?.cloneNode(true);
+      if (cleanRoot) {
+        const nonVisualSelector = 'script, style, template, noscript, meta, link';
+        cleanRoot.querySelectorAll(nonVisualSelector).forEach(node => node.remove());
+
+        cleanRoot.querySelectorAll('[aria-hidden], [hidden]').forEach(node => {
+          const ariaHidden = node.getAttribute('aria-hidden');
+          const isAriaHidden = node.hasAttribute('aria-hidden') && ariaHidden !== null && ariaHidden.toLowerCase() !== 'false';
+          const isHidden = node.hasAttribute('hidden');
+          if (isAriaHidden || isHidden) {
+            node.remove();
+          }
+        });
+      }
+
+      const cleanBody = cleanRoot?.querySelector('body');
+      const text = cleanBody?.innerText?.trim() || doc.body?.innerText?.trim() || '';
 
       crawledPages.push({ url: currentUrl, title, text });
       showContentNotification(`Crawled ${crawledPages.length}/${pageLimit}: ${currentUrl}`, 'info', 2500);
