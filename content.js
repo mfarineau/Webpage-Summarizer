@@ -634,16 +634,26 @@ async function crawlSiteToPdf(startUrl = window.location.href, maxPages = 20) {
     visited.add(currentUrl);
 
     try {
-      const response = await fetch(currentUrl, { credentials: 'include' });
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
+      let doc;
+      let title;
+      let cleanRoot;
+
+      if (currentUrl === startHref) {
+        doc = document;
+        title = document.title?.trim() || currentUrl;
+        cleanRoot = document.documentElement?.cloneNode(true);
+      } else {
+        const response = await fetch(currentUrl, { credentials: 'include' });
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+
+        const html = await response.text();
+        doc = parser.parseFromString(html, 'text/html');
+        title = doc.querySelector('title')?.textContent?.trim() || currentUrl;
+        cleanRoot = doc.documentElement?.cloneNode(true);
       }
 
-      const html = await response.text();
-      const doc = parser.parseFromString(html, 'text/html');
-      const title = doc.querySelector('title')?.textContent?.trim() || currentUrl;
-
-      const cleanRoot = doc.documentElement?.cloneNode(true);
       if (cleanRoot) {
         const nonVisualSelector = 'script, style, template, noscript, meta, link';
         cleanRoot.querySelectorAll(nonVisualSelector).forEach(node => node.remove());
@@ -720,6 +730,9 @@ async function crawlSiteToPdf(startUrl = window.location.href, maxPages = 20) {
           }
           const normalized = normalizeUrl(href, currentUrl);
           if (!normalized) {
+            return;
+          }
+          if (normalized === startHref) {
             return;
           }
           if (visited.has(normalized) || enqueued.has(normalized)) {
