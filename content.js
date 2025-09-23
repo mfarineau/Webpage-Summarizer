@@ -33,6 +33,18 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   } else if (message.action === 'analyze_bias') {
     // Analyze potential political bias in the current page
     injectBiasWidget();
+  } else if (message.action === 'crawl_site_pdf') {
+    (async () => {
+      try {
+        await crawlSiteToPdf(message.startUrl, message.maxPages);
+        sendResponse({ ok: true });
+      } catch (err) {
+        const errorMessage = err?.message || String(err);
+        console.error('Failed to crawl site to PDF:', err);
+        sendResponse({ ok: false, error: errorMessage });
+      }
+    })();
+    return true;
   }
   // No asynchronous response, so we don't keep the message port open.
   return false;
@@ -564,6 +576,252 @@ function savePage() {
       showContentNotification('Page saved!', 'success');
     });
   });
+}
+
+async function crawlSiteToPdf(startUrl = window.location.href, maxPages = 20) {
+  const DEFAULT_MAX_PAGES = 20;
+  const MAX_CAP = 75;
+
+  if (!window.PDFLib) {
+    throw new Error('PDF library is not available.');
+  }
+
+  const { PDFDocument, StandardFonts } = window.PDFLib;
+
+  const limitSource = Number.isFinite(Number(maxPages)) ? Math.floor(Number(maxPages)) : DEFAULT_MAX_PAGES;
+  const pageLimit = Math.max(1, Math.min(limitSource || DEFAULT_MAX_PAGES, MAX_CAP));
+
+  const currentOrigin = window.location.origin;
+  const startUrlObject = new URL(startUrl || window.location.href, window.location.href);
+  if (startUrlObject.origin !== currentOrigin) {
+    throw new Error('Start URL must be on the current site.');
+  }
+
+  const normalizeUrl = (candidate, base) => {
+    try {
+      const resolved = new URL(candidate, base);
+      if (resolved.origin !== currentOrigin) {
+        return null;
+      }
+      resolved.hash = '';
+      return resolved.href;
+    } catch (err) {
+      return null;
+    }
+  };
+
+  const startHref = normalizeUrl(startUrlObject.href, startUrlObject.href);
+  if (!startHref) {
+    throw new Error('Unable to determine a valid starting URL for the crawl.');
+  }
+
+  const queue = [startHref];
+  const enqueued = new Set(queue);
+  const visited = new Set();
+  const crawledPages = [];
+
+  const parser = new DOMParser();
+
+  showContentNotification('Starting site crawl for PDF export…', 'info', 3000);
+
+  while (queue.length && crawledPages.length < pageLimit) {
+    const currentUrl = queue.shift();
+    enqueued.delete(currentUrl);
+
+    if (visited.has(currentUrl)) {
+      continue;
+    }
+    visited.add(currentUrl);
+
+    try {
+      const response = await fetch(currentUrl, { credentials: 'include' });
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+
+      const html = await response.text();
+      const doc = parser.parseFromString(html, 'text/html');
+      const title = doc.querySelector('title')?.textContent?.trim() || currentUrl;
+      const text = doc.body?.innerText?.trim() || '';
+
+      crawledPages.push({ url: currentUrl, title, text });
+      showContentNotification(`Crawled ${crawledPages.length}/${pageLimit}: ${currentUrl}`, 'info', 2500);
+
+      if (crawledPages.length >= pageLimit) {
+        break;
+      }
+
+      doc.querySelectorAll('a[href]').forEach((anchor) => {
+        const href = anchor.getAttribute('href');
+        if (!href) {
+          return;
+        }
+        const normalized = normalizeUrl(href, currentUrl);
+        if (!normalized) {
+          return;
+        }
+        if (visited.has(normalized) || enqueued.has(normalized)) {
+          return;
+        }
+        enqueued.add(normalized);
+        queue.push(normalized);
+      });
+    } catch (error) {
+      console.error('Failed to fetch page during crawl:', currentUrl, error);
+      showContentNotification(`Failed to crawl ${currentUrl}: ${error.message || error}`, 'error', 4000);
+    }
+  }
+
+  if (!crawledPages.length) {
+    const error = new Error('No pages were successfully crawled.');
+    showContentNotification(error.message, 'error', 5000);
+    throw error;
+  }
+
+  try {
+    showContentNotification('Generating PDF…', 'info', 3000);
+
+    const pdfDoc = await PDFDocument.create();
+    const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+    const pageMargin = 40;
+    const headingSize = 16;
+    const bodySize = 12;
+    const headingLineHeight = headingSize * 1.35;
+    const bodyLineHeight = bodySize * 1.4;
+
+    let page = pdfDoc.addPage();
+    let { width, height } = page.getSize();
+    let cursorY = height - pageMargin;
+
+    const maxLineWidth = width - pageMargin * 2;
+
+    const addPage = () => {
+      page = pdfDoc.addPage();
+      ({ width, height } = page.getSize());
+      cursorY = height - pageMargin;
+    };
+
+    const ensureSpace = (lineHeight) => {
+      if (cursorY - lineHeight < pageMargin) {
+        addPage();
+      }
+    };
+
+    const wrapText = (text, size) => {
+      const lines = [];
+      const paragraphs = (text || '').split(/\r?\n/);
+
+      paragraphs.forEach((paragraph, index) => {
+        const words = paragraph.trim().split(/\s+/).filter(Boolean);
+        if (!words.length) {
+          if (index !== paragraphs.length - 1) {
+            lines.push('');
+          }
+          return;
+        }
+
+        let currentLine = '';
+        words.forEach((word) => {
+          const tentative = currentLine ? `${currentLine} ${word}` : word;
+          if (font.widthOfTextAtSize(tentative, size) <= maxLineWidth) {
+            currentLine = tentative;
+          } else {
+            if (currentLine) {
+              lines.push(currentLine);
+            }
+
+            if (font.widthOfTextAtSize(word, size) <= maxLineWidth) {
+              currentLine = word;
+            } else {
+              let segment = '';
+              for (const char of word) {
+                const candidate = segment + char;
+                if (font.widthOfTextAtSize(candidate, size) <= maxLineWidth) {
+                  segment = candidate;
+                } else {
+                  if (segment) {
+                    lines.push(segment);
+                  }
+                  segment = char;
+                }
+              }
+              currentLine = segment;
+            }
+          }
+        });
+
+        if (currentLine) {
+          lines.push(currentLine);
+        }
+
+        if (index !== paragraphs.length - 1) {
+          lines.push('');
+        }
+      });
+
+      return lines;
+    };
+
+    const drawLines = (lines, size, lineHeight) => {
+      lines.forEach((line) => {
+        ensureSpace(lineHeight);
+        if (line) {
+          page.drawText(line, { x: pageMargin, y: cursorY, size, font });
+        }
+        cursorY -= lineHeight;
+      });
+    };
+
+    crawledPages.forEach(({ url, title, text }, index) => {
+      if (index > 0) {
+        cursorY -= bodyLineHeight;
+        if (cursorY < pageMargin) {
+          addPage();
+        }
+      }
+
+      const headingLines = wrapText(title, headingSize);
+      drawLines(headingLines, headingSize, headingLineHeight);
+
+      const urlLines = wrapText(url, bodySize);
+      drawLines(urlLines, bodySize, bodyLineHeight);
+
+      cursorY -= bodyLineHeight / 2;
+      if (cursorY < pageMargin) {
+        addPage();
+      }
+
+      const textLines = wrapText(text, bodySize);
+      drawLines(textLines, bodySize, bodyLineHeight);
+    });
+
+    const dataUrl = await pdfDoc.saveAsBase64({ dataUri: true });
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+    const filename = `${startUrlObject.hostname || 'site'}-crawl-${timestamp}.pdf`;
+
+    await new Promise((resolve, reject) => {
+      chrome.runtime.sendMessage(
+        { action: 'download_pdf', filename, dataUrl },
+        (response) => {
+          const runtimeError = chrome.runtime.lastError;
+          if (runtimeError) {
+            reject(new Error(runtimeError.message));
+            return;
+          }
+          if (response?.ok) {
+            resolve(response);
+          } else {
+            reject(new Error(response?.error || 'Failed to initiate PDF download.'));
+          }
+        }
+      );
+    });
+
+    showContentNotification(`PDF ready with ${crawledPages.length} page(s).`, 'success', 5000);
+  } catch (error) {
+    showContentNotification(error.message || 'Failed to generate PDF.', 'error', 5000);
+    throw error;
+  }
 }
 
 // Simple ad remover used when the user presses the "Remove Ads" button in the
