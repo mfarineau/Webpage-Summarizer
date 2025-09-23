@@ -659,27 +659,50 @@ async function crawlSiteToPdf(startUrl = window.location.href, maxPages = 20) {
       }
 
       const cleanBody = cleanRoot?.querySelector('body');
-      const contentSelectors = 'p, h1, h2, h3, h4, h5, h6, li, blockquote, article, section';
+      const contentSelectors = 'h1, h2, h3, h4, h5, h6, p, ul, li';
       let text = '';
 
       if (cleanBody) {
         const contentNodes = cleanBody.querySelectorAll(contentSelectors);
         const parts = [];
+        const processedListItems = new WeakSet();
 
         contentNodes.forEach((node) => {
+          const tagName = node.tagName?.toLowerCase();
+          if (!tagName) {
+            return;
+          }
+
+          if (tagName === 'ul') {
+            const listItems = Array.from(node.children).filter(
+              (child) => child.tagName?.toLowerCase() === 'li'
+            );
+            listItems.forEach((item) => {
+              const value = item.textContent?.trim();
+              if (value) {
+                parts.push(value);
+                processedListItems.add(item);
+              }
+            });
+            return;
+          }
+
+          if (tagName === 'li' && processedListItems.has(node)) {
+            return;
+          }
+
           const value = node.textContent?.trim();
           if (value) {
             parts.push(value);
+            if (tagName === 'li') {
+              processedListItems.add(node);
+            }
           }
         });
 
         if (parts.length) {
           text = parts.join('\n\n');
         }
-      }
-
-      if (!text) {
-        text = cleanBody?.innerText?.trim() || doc.body?.innerText?.trim() || '';
       }
 
       crawledPages.push({ url: currentUrl, title, text });
