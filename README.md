@@ -25,3 +25,11 @@ Click the **Bypass** button to reload the current page with JavaScript disabled.
 ## Enable JavaScript
 
 Use the **Enable JS** button to restore scripting. The page is reloaded with JavaScript allowed again.
+
+## Export Site to PDF
+
+Press the **Export PDF** button in the popup to generate a downloadable PDF of the current site. The crawler follows links to same-origin pages that share the current site's host, capturing each page's text exactly as it appears so the final document preserves the original wording. To keep exports manageable, the capture stops after the first 50 pages or when the site runs out of same-origin links.
+
+When you trigger an export, Chrome will prompt you to grant the extension the **Downloads** permission so it can save the generated PDF to your device. Granting this permission is required for the export to complete successfully.
+
+While the export runs, the popup shows a progress counter that updates as each page is fetched and rendered. Large sites can take several minutes to finish, so let the process continue until the completion notification appears and the PDF downloads automatically.
