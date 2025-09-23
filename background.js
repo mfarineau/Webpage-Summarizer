@@ -18,3 +18,25 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
     chrome.tabs.sendMessage(tab.id, { action: 'summarize_selection' });
   }
 });
+
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (!message || message.action !== 'download_pdf') {
+    return false;
+  }
+
+  chrome.downloads.download(
+    { url: message.dataUrl, filename: message.filename },
+    () => {
+      const error = chrome.runtime.lastError;
+
+      if (error) {
+        sendResponse({ ok: false, error: error.message || String(error) });
+        return;
+      }
+
+      sendResponse({ ok: true });
+    }
+  );
+
+  return true;
+});
