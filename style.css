@@ -44,7 +44,8 @@ body {
   /* Slightly wider for better layout */
   background: var(--bg-gradient);
   color: var(--text-main);
-  min-height: 500px;
+  height: auto;
+  min-height: 0;
   box-sizing: border-box;
 }
 

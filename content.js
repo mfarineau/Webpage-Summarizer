@@ -53,66 +53,127 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 const CONTENT_TOAST_STYLE_ID = 'webpage-summarizer-toast-styles';
 const CONTENT_TOAST_CONTAINER_ID = 'webpage-summarizer-toast-stack';
 
+// Premium Glassmorphism Styles for Injected Content
 const CONTENT_TOAST_STYLES = `
-.ws-toast-stack {
+:root {
+  --ws-bg-color: #0f0c29;
+  --ws-bg-gradient: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+  --ws-glass-surface: rgba(255, 255, 255, 0.05);
+  --ws-glass-border: rgba(255, 255, 255, 0.1);
+  --ws-glass-highlight: rgba(255, 255, 255, 0.15);
+  --ws-primary-accent: #b000e6;
+  --ws-primary-gradient: linear-gradient(135deg, #b000e6, #7c4dff);
+  --ws-text-main: #ffffff;
+  --ws-text-muted: rgba(255, 255, 255, 0.7);
+  --ws-radius-md: 12px;
+  --ws-shadow-md: 0 8px 16px rgba(0, 0, 0, 0.2);
+  --ws-font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.ws-widget-container {
   position: fixed;
-  bottom: 16px;
-  left: 50%;
-  transform: translateX(-50%);
+  bottom: 20px;
+  right: 20px;
+  width: 420px;
+  background: var(--ws-bg-gradient);
+  color: var(--ws-text-main);
+  border: 1px solid var(--ws-glass-border);
+  border-radius: var(--ws-radius-md);
+  box-shadow: var(--ws-shadow-md);
+  padding: 0;
+  font-family: var(--ws-font-family);
+  z-index: 2147483647;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
+  resize: both;
+}
+
+.ws-widget-header {
+  padding: 12px 16px;
+  background: rgba(0, 0, 0, 0.2);
+  border-bottom: 1px solid var(--ws-glass-border);
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: move;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: var(--ws-text-main);
+}
+
+.ws-widget-content {
+  padding: 16px;
+  overflow-y: auto;
+  flex: 1;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: var(--ws-text-muted);
+}
+
+.ws-widget-content h3, .ws-widget-content h4 {
+  color: var(--ws-text-main);
+  margin-top: 0;
+}
+
+.ws-widget-actions {
+  padding: 12px 16px;
+  border-top: 1px solid var(--ws-glass-border);
+  display: flex;
   gap: 8px;
-  width: min(320px, calc(100% - 32px));
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.ws-btn {
+  background: var(--ws-glass-surface);
+  border: 1px solid var(--ws-glass-border);
+  color: var(--ws-text-main);
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: all 0.2s;
+  flex: 1;
+}
+
+.ws-btn:hover {
+  background: var(--ws-glass-highlight);
+}
+
+.ws-btn-primary {
+  background: var(--ws-primary-gradient);
+  border: none;
+  color: white;
+}
+
+/* Toast Styles */
+.ws-toast-stack {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
   z-index: 2147483647;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
   pointer-events: none;
-  --ws-toast-bg: rgba(255, 255, 255, 0.95);
-  --ws-toast-border: rgba(0, 0, 0, 0.12);
-  --ws-toast-text: #1b1b1b;
-  --ws-toast-info: #2962ff;
-  --ws-toast-success: #2e7d32;
-  --ws-toast-error: #c62828;
-  --ws-toast-shadow: rgba(0, 0, 0, 0.25);
-}
-
-.ws-toast-stack.ws-toast-stack--page {
-  top: 20px;
-  bottom: auto;
-  right: 24px;
-  left: auto;
-  transform: none;
-  align-items: flex-end;
-  width: min(360px, calc(100% - 32px));
-}
-
-@media (max-width: 600px) {
-  .ws-toast-stack.ws-toast-stack--page {
-    left: 50%;
-    right: auto;
-    transform: translateX(-50%);
-    align-items: center;
-    width: calc(100% - 32px);
-  }
 }
 
 .ws-toast {
-  pointer-events: auto;
+  background: rgba(30, 30, 30, 0.95);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--ws-glass-border);
+  border-radius: var(--ws-radius-md);
+  padding: 12px 16px;
   display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  background: var(--ws-toast-bg);
-  color: var(--ws-toast-text);
-  border: 1px solid var(--ws-toast-border);
-  border-left: 4px solid var(--ws-toast-info);
-  border-radius: 12px;
-  box-shadow: 0 12px 32px var(--ws-toast-shadow);
-  padding: 10px 12px;
-  font-size: 14px;
-  line-height: 1.4;
+  align-items: center;
+  gap: 12px;
+  color: var(--ws-text-main);
+  box-shadow: var(--ws-shadow-md);
   opacity: 0;
-  transform: translateY(10px);
-  transition: opacity 0.2s ease, transform 0.2s ease;
-  white-space: pre-line;
-  max-width: min(360px, calc(100vw - 32px));
+  transform: translateY(20px);
+  transition: all 0.3s;
+  pointer-events: auto;
 }
 
 .ws-toast.is-visible {
@@ -120,46 +181,9 @@ const CONTENT_TOAST_STYLES = `
   transform: translateY(0);
 }
 
-.ws-toast__icon {
-  font-size: 1.2rem;
-  line-height: 1;
-  margin-top: 2px;
-}
-
-.ws-toast__message {
-  flex: 1;
-  white-space: inherit;
-}
-
-.ws-toast--success {
-  border-left-color: var(--ws-toast-success);
-}
-
-.ws-toast--error {
-  border-left-color: var(--ws-toast-error);
-}
-
-.ws-toast--info {
-  border-left-color: var(--ws-toast-info);
-}
-
-@media (prefers-color-scheme: dark) {
-  .ws-toast-stack {
-    --ws-toast-bg: rgba(24, 24, 24, 0.94);
-    --ws-toast-border: rgba(255, 255, 255, 0.16);
-    --ws-toast-text: #f5f5f5;
-    --ws-toast-info: #82b1ff;
-    --ws-toast-success: #81c784;
-    --ws-toast-error: #ef9a9a;
-    --ws-toast-shadow: rgba(0, 0, 0, 0.6);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .ws-toast {
-    transition: none;
-  }
-}
+.ws-toast--success { border-left: 4px solid #00e676; }
+.ws-toast--error { border-left: 4px solid #ff1744; }
+.ws-toast--info { border-left: 4px solid #2979ff; }
 `;
 
 const CONTENT_TOAST_ICONS = {
@@ -238,80 +262,47 @@ function showContentNotification(message, type = 'info', duration = 4000) {
 }
 
 // Build a floating widget with shared styling, controls and drag support.
+// Build a floating widget with shared styling, controls and drag support.
 function createFloatingWidget(titleText, maxHeight = '70vh') {
-  const container = document.createElement('div');
-  container.style = `
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    width: 420px;
-    max-height: ${maxHeight};
-    background: #fff;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    border-radius: 8px;
-    padding: 16px;
-    font-family: Roboto, Arial, sans-serif;
-    z-index: 999999;
-    overflow: auto;
-    resize: both;
-    left: auto;
-    top: auto;
-    font-size: 1rem;
-    line-height: 1.25;
-    color: #222;
-  `;
+  ensureToastStylesInjected(); // Ensure styles are present
 
-  const title = document.createElement('div');
-  title.innerText = titleText;
-  title.style = `
-    font-weight: 500;
-    margin: -16px -16px 12px -16px;
-    font-size: 1.1rem;
-    padding: 8px 12px;
-    background: #6200ee;
-    color: #fff;
-    border-radius: 8px 8px 0 0;
-    cursor: move;
-  `;
+  const container = document.createElement('div');
+  container.className = 'ws-widget-container';
+  container.style.maxHeight = maxHeight;
+
+  const header = document.createElement('div');
+  header.className = 'ws-widget-header';
+  header.textContent = titleText;
 
   const content = document.createElement('div');
-  content.style = 'line-height: 1.25; font-size: 1rem; margin-top: 8px; color: #222;';
+  content.className = 'ws-widget-content';
+
+  const actions = document.createElement('div');
+  actions.className = 'ws-widget-actions';
 
   const copyBtn = document.createElement('button');
-  copyBtn.innerText = 'Copy';
-  copyBtn.style = `
-    margin-top: 8px;
-    width: 100%;
-    background: #6200ee;
-    color: #fff;
-    border: none;
-    border-radius: 4px;
-    padding: 8px 12px;
-    cursor: pointer;
-  `;
-  copyBtn.onclick = () => navigator.clipboard.writeText(content.innerText);
+  copyBtn.className = 'ws-btn ws-btn-primary';
+  copyBtn.textContent = 'Copy';
+  copyBtn.onclick = () => {
+    navigator.clipboard.writeText(content.innerText);
+    showContentNotification('Copied to clipboard!', 'success');
+  };
 
-  const close = document.createElement('button');
-  close.innerText = 'Dismiss';
-  close.style = `
-    margin-top: 12px;
-    width: 100%;
-    background: #6200ee;
-    color: #fff;
-    border: none;
-    border-radius: 4px;
-    padding: 8px 12px;
-    cursor: pointer;
-  `;
-  close.onclick = () => container.remove();
+  const closeBtn = document.createElement('button');
+  closeBtn.className = 'ws-btn';
+  closeBtn.textContent = 'Dismiss';
+  closeBtn.onclick = () => container.remove();
 
-  container.appendChild(title);
+  actions.appendChild(copyBtn);
+  actions.appendChild(closeBtn);
+
+  container.appendChild(header);
   container.appendChild(content);
-  container.appendChild(copyBtn);
-  container.appendChild(close);
+  container.appendChild(actions);
   document.body.appendChild(container);
 
-  title.addEventListener('mousedown', (e) => {
+  // Drag Logic
+  header.addEventListener('mousedown', (e) => {
     e.preventDefault();
     const rect = container.getBoundingClientRect();
     const offsetX = e.clientX - rect.left;
