@@ -61,6 +61,12 @@ document.getElementById('saveKeyBtn').addEventListener('click', () => {
     });
 });
 
+// --- Settings Toggle ---
+document.getElementById('toggleSettingsBtn').addEventListener('click', () => {
+    const settingsPanel = document.getElementById('settingsPanel');
+    settingsPanel.hidden = !settingsPanel.hidden;
+});
+
 // --- OpenAI Helpers ---
 async function fetchChatCompletion(messages) {
     if (!currentApiKey) {
@@ -227,11 +233,6 @@ chatSendBtn.addEventListener('click', async () => {
 });
 
 // 4. Utilities
-document.getElementById('toggleUtilsBtn').addEventListener('click', () => {
-    const section = document.getElementById('utilsSection');
-    section.hidden = !section.hidden;
-});
-
 document.getElementById('removeAdsBtn').addEventListener('click', async () => {
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
     if (tab) chrome.tabs.sendMessage(tab.id, { action: 'remove_ads' });

@@ -39,19 +39,37 @@
 body {
   font-family: var(--font-family);
   margin: 0;
-  padding: 20px;
-  width: 380px;
-  /* Slightly wider for better layout */
+  padding: 0;
+  /* Reset padding, handled by container */
+  width: 100%;
+  height: 100vh;
   background: var(--bg-gradient);
   color: var(--text-main);
-  height: auto;
-  min-height: 0;
   box-sizing: border-box;
+  overflow: hidden;
+  /* Prevent body scroll, handle in sections */
 }
 
-/* Typography */
-h5.title {
-  margin: 0 0 24px 0;
+/* Dashboard Layout */
+.dashboard-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 20px;
+  box-sizing: border-box;
+  gap: 16px;
+}
+
+/* Header */
+.dashboard-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.title {
+  margin: 0;
   font-size: 1.5rem;
   font-weight: 700;
   letter-spacing: -0.5px;
@@ -59,13 +77,159 @@ h5.title {
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
-  text-align: center;
 }
 
-/* Input Fields */
+.btn-icon {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 50%;
+  transition: all 0.2s;
+}
+
+.btn-icon:hover {
+  background: var(--glass-surface);
+  color: var(--text-main);
+}
+
+.btn-icon svg {
+  width: 20px;
+  height: 20px;
+  fill: currentColor;
+}
+
+/* Panels */
+.panel-section,
+.control-panel,
+.output-panel,
+.tools-panel {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--glass-border);
+  padding: 16px;
+}
+
+/* Control Panel */
+.control-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.large-btn {
+  padding: 16px;
+  font-size: 1.1rem;
+}
+
+/* Output Panel */
+.output-panel {
+  flex: 1;
+  /* Grow to fill space */
+  display: flex;
+  flex-direction: column;
+  min-height: 200px;
+  /* Minimum height */
+  overflow: hidden;
+  /* Contain scroll */
+}
+
+.output-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.output-header h4 {
+  margin: 0;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-muted);
+}
+
+.scrollable-content {
+  flex: 1;
+  overflow-y: auto;
+  padding-right: 8px;
+  /* Space for scrollbar */
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+/* Chat Interface */
+.chat-container {
+  margin-top: 16px;
+  border-top: 1px solid var(--glass-border);
+  padding-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 40%;
+  /* Limit chat height */
+}
+
+.chat-log {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 100px;
+}
+
+.chat-input-row {
+  display: flex;
+  gap: 8px;
+}
+
+.small-btn {
+  width: auto;
+  padding: 8px 16px;
+}
+
+/* Tools Panel */
+.tools-panel {
+  margin-top: auto;
+  /* Push to bottom if space allows */
+}
+
+.section-label {
+  margin: 0 0 12px 0;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-muted);
+}
+
+.tools-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+.tool-btn {
+  flex-direction: column;
+  padding: 12px 4px;
+  gap: 6px;
+  font-size: 0.75rem;
+  height: 100%;
+}
+
+.tool-btn svg {
+  width: 20px;
+  height: 20px;
+  margin-bottom: 2px;
+}
+
+/* Common UI Elements */
 .input-field {
-  margin-bottom: 20px;
-  position: relative;
+  margin-bottom: 0;
+  /* Reset */
 }
 
 .field-label {
@@ -111,30 +275,6 @@ select:focus {
   background: var(--glass-highlight);
 }
 
-select {
-  appearance: none;
-  background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23ffffff%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
-  background-repeat: no-repeat;
-  background-position: right 12px top 50%;
-  background-size: 10px auto;
-}
-
-/* Status Indicator */
-.status-indicator {
-  position: absolute;
-  right: 12px;
-  font-size: 0.8rem;
-  pointer-events: none;
-}
-
-.status-saved {
-  color: var(--success-color);
-}
-
-.status-missing {
-  color: var(--error-color);
-}
-
 /* Buttons */
 .btn {
   display: flex;
@@ -160,7 +300,6 @@ select {
   fill: currentColor;
 }
 
-/* Primary Button */
 .btn.primary {
   background: var(--primary-gradient);
   color: white;
@@ -176,107 +315,15 @@ select {
   transform: translateY(1px);
 }
 
-/* Secondary/Tertiary Buttons */
-.btn.secondary,
-.btn.tertiary {
+.btn.secondary {
   background: var(--glass-surface);
   border: 1px solid var(--glass-border);
   color: var(--text-main);
-  font-size: 0.9rem;
-  padding: 10px;
 }
 
-.btn.secondary:hover,
-.btn.tertiary:hover {
+.btn.secondary:hover {
   background: var(--glass-highlight);
   border-color: rgba(255, 255, 255, 0.3);
-}
-
-/* Actions Container */
-.actions {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-/* More Actions Toggle */
-#toggleMoreBtn {
-  background: transparent;
-  border: none;
-  color: var(--text-muted);
-  font-size: 0.9rem;
-  padding: 8px;
-  margin-top: 8px;
-}
-
-#toggleMoreBtn:hover {
-  color: var(--text-main);
-  background: transparent;
-}
-
-#toggleMoreBtn svg {
-  transition: transform 0.3s ease;
-}
-
-#toggleMoreBtn.expanded svg {
-  transform: rotate(180deg);
-}
-
-/* Segmented Control */
-.segmented-control {
-  display: flex;
-  background: rgba(0, 0, 0, 0.2);
-  padding: 4px;
-  border-radius: var(--radius-md);
-  margin-bottom: 16px;
-}
-
-.segmented-control .segment {
-  flex: 1;
-  background: transparent;
-  border: none;
-  color: var(--text-muted);
-  padding: 8px;
-  font-size: 0.85rem;
-  font-weight: 500;
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.segmented-control .segment.active {
-  background: var(--glass-highlight);
-  color: var(--text-main);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-/* Action Grid for Secondary Items */
-.action-group {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-}
-
-.action-group[hidden] {
-  display: none !important;
-}
-
-.action-item {
-  flex-direction: column;
-  gap: 8px;
-  height: auto;
-  padding: 16px 8px;
-}
-
-.action-item svg {
-  width: 24px;
-  height: 24px;
-  margin-bottom: 4px;
-}
-
-.action-item span {
-  font-size: 0.8rem;
-  text-align: center;
 }
 
 /* Toast Notifications */
@@ -325,31 +372,6 @@ select {
 
 .ws-toast--info {
   border-left: 4px solid var(--info-color);
-}
-
-/* Modal */
-.modal-overlay {
-  background: rgba(0, 0, 0, 0.7);
-  backdrop-filter: blur(5px);
-}
-
-.modal {
-  background: #1e1e2f;
-  border: 1px solid var(--glass-border);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-md);
-  color: var(--text-main);
-}
-
-.modal h4 {
-  color: var(--text-main);
-}
-
-.modal ul li {
-  background: rgba(255, 255, 255, 0.05);
-  padding: 8px;
-  border-radius: var(--radius-sm);
-  margin-bottom: 8px;
 }
 
 /* Scrollbar */

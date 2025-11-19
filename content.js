@@ -31,26 +31,118 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 });
 
 let sidebarIframe = null;
+let sidebarTab = null;
+let resizeHandle = null;
 let sidebarOpen = false;
+let sidebarWidth = 400; // Default width
+
 const SIDEBAR_ID = 'webpage-summarizer-sidebar';
+const TAB_ID = 'webpage-summarizer-tab';
+const HANDLE_ID = 'webpage-summarizer-handle';
+
+// Inject CSS for Sidebar, Tab, and Handle
+const SIDEBAR_STYLES = `
+  #${SIDEBAR_ID} {
+    position: fixed;
+    top: 0;
+    right: 0;
+    height: 100%;
+    border: none;
+    z-index: 2147483647;
+    box-shadow: -2px 0 10px rgba(0,0,0,0.2);
+    background: #fff;
+    transform: translateX(100%);
+    transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  }
+  #${SIDEBAR_ID}.ws-open {
+    transform: translateX(0);
+  }
+  #${TAB_ID} {
+    position: fixed;
+    top: 50%;
+    right: 0;
+    transform: translateY(-50%);
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(135deg, #b000e6, #7c4dff);
+    border-radius: 8px 0 0 8px;
+    cursor: pointer;
+    z-index: 2147483648;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: -2px 2px 5px rgba(0,0,0,0.2);
+    transition: right 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  }
+  #${TAB_ID}:hover {
+    width: 48px;
+  }
+  #${TAB_ID} svg {
+    width: 24px;
+    height: 24px;
+    fill: white;
+  }
+  #${HANDLE_ID} {
+    position: fixed;
+    top: 0;
+    right: 400px; /* Matches initial width */
+    width: 10px;
+    height: 100%;
+    cursor: col-resize;
+    z-index: 2147483648;
+    display: none; /* Hidden when sidebar is closed */
+  }
+  #${HANDLE_ID}:hover {
+    background: rgba(176, 0, 230, 0.1);
+  }
+`;
+
+function injectSidebarStyles() {
+  if (document.getElementById('ws-sidebar-styles')) return;
+  const style = document.createElement('style');
+  style.id = 'ws-sidebar-styles';
+  style.textContent = SIDEBAR_STYLES;
+  document.head.appendChild(style);
+}
+
+// Initialize on load
+injectSidebarStyles();
+createSidebarTab();
 
 function toggleSidebar() {
+  if (!sidebarIframe) createSidebar();
+  if (!resizeHandle) createResizeHandle();
+
+  sidebarOpen = !sidebarOpen;
+
   if (sidebarOpen) {
-    // Close
-    if (sidebarIframe) {
-      sidebarIframe.style.display = 'none';
-    }
-    document.body.style.marginRight = '0px';
-    document.body.style.width = '100%';
-    sidebarOpen = false;
-  } else {
     // Open
-    if (!sidebarIframe) {
-      createSidebar();
-    }
-    sidebarIframe.style.display = 'block';
-    document.body.style.marginRight = '400px';
-    sidebarOpen = true;
+    sidebarIframe.classList.add('ws-open');
+    sidebarTab.style.right = `${sidebarWidth}px`;
+    resizeHandle.style.display = 'block';
+    resizeHandle.style.right = `${sidebarWidth}px`;
+    document.body.style.marginRight = `${sidebarWidth}px`;
+    document.body.style.transition = 'margin-right 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)';
+
+    // Update Tab Icon to 'Close' (X)
+    sidebarTab.innerHTML = `
+      <svg viewBox="0 0 24 24">
+        <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+      </svg>
+    `;
+  } else {
+    // Close
+    sidebarIframe.classList.remove('ws-open');
+    sidebarTab.style.right = '0';
+    resizeHandle.style.display = 'none';
+    document.body.style.marginRight = '0';
+
+    // Update Tab Icon to 'Folder'/Menu
+    sidebarTab.innerHTML = `
+      <svg viewBox="0 0 24 24">
+        <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/>
+      </svg>
+    `;
   }
 }
 
@@ -63,17 +155,88 @@ function createSidebar() {
 
   sidebarIframe = document.createElement('iframe');
   sidebarIframe.id = SIDEBAR_ID;
+  sidebarIframe.classList.add('ws-protected'); // Protect from ad blocker
   sidebarIframe.src = chrome.runtime.getURL('sidebar.html');
-  sidebarIframe.style.position = 'fixed';
-  sidebarIframe.style.top = '0';
-  sidebarIframe.style.right = '0';
-  sidebarIframe.style.width = '400px';
-  sidebarIframe.style.height = '100%';
-  sidebarIframe.style.border = 'none';
-  sidebarIframe.style.zIndex = '2147483647'; // Max z-index
-  sidebarIframe.style.boxShadow = '-2px 0 5px rgba(0,0,0,0.2)';
-  sidebarIframe.style.background = '#fff'; // Default bg
+  sidebarIframe.style.width = `${sidebarWidth}px`;
   document.body.appendChild(sidebarIframe);
+}
+
+function createSidebarTab() {
+  if (document.getElementById(TAB_ID)) {
+    sidebarTab = document.getElementById(TAB_ID);
+    return;
+  }
+
+  sidebarTab = document.createElement('div');
+  sidebarTab.id = TAB_ID;
+  sidebarTab.classList.add('ws-protected'); // Protect from ad blocker
+  sidebarTab.title = 'Toggle Webpage Summarizer';
+  sidebarTab.innerHTML = `
+    <svg viewBox="0 0 24 24">
+      <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/>
+    </svg>
+  `;
+  sidebarTab.addEventListener('click', toggleSidebar);
+  document.body.appendChild(sidebarTab);
+}
+
+function createResizeHandle() {
+  if (document.getElementById(HANDLE_ID)) {
+    resizeHandle = document.getElementById(HANDLE_ID);
+    return;
+  }
+
+  resizeHandle = document.createElement('div');
+  resizeHandle.id = HANDLE_ID;
+  resizeHandle.classList.add('ws-protected'); // Protect from ad blocker
+
+  let isResizing = false;
+  let animationFrameId = null;
+
+  resizeHandle.addEventListener('mousedown', (e) => {
+    isResizing = true;
+    document.body.style.userSelect = 'none'; // Prevent selection while dragging
+    sidebarIframe.style.pointerEvents = 'none'; // Prevent iframe stealing mouse events
+
+    // Disable transitions for instant feedback
+    sidebarIframe.style.transition = 'none';
+    sidebarTab.style.transition = 'none';
+    document.body.style.transition = 'none';
+  });
+
+  document.addEventListener('mousemove', (e) => {
+    if (!isResizing) return;
+
+    if (animationFrameId) cancelAnimationFrame(animationFrameId);
+
+    animationFrameId = requestAnimationFrame(() => {
+      const newWidth = window.innerWidth - e.clientX;
+      if (newWidth > 250 && newWidth < 800) { // Min/Max constraints
+        sidebarWidth = newWidth;
+        sidebarIframe.style.width = `${sidebarWidth}px`;
+        resizeHandle.style.right = `${sidebarWidth}px`;
+        sidebarTab.style.right = `${sidebarWidth}px`;
+        document.body.style.marginRight = `${sidebarWidth}px`;
+      }
+    });
+  });
+
+  document.addEventListener('mouseup', () => {
+    if (isResizing) {
+      isResizing = false;
+      if (animationFrameId) cancelAnimationFrame(animationFrameId);
+
+      document.body.style.userSelect = '';
+      sidebarIframe.style.pointerEvents = '';
+
+      // Re-enable transitions (clear inline style so CSS class takes over)
+      sidebarIframe.style.transition = '';
+      sidebarTab.style.transition = '';
+      document.body.style.transition = 'margin-right 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)';
+    }
+  });
+
+  document.body.appendChild(resizeHandle);
 }
 
 function removeAds() {
@@ -88,8 +251,9 @@ function removeAds() {
   const ads = document.querySelectorAll(adSelectors.join(','));
   let count = 0;
   ads.forEach(ad => {
-    // Explicitly exclude our sidebar
-    if (ad.id === SIDEBAR_ID) return;
+    // Explicitly exclude our sidebar elements by ID and Class
+    if (ad.id === SIDEBAR_ID || ad.id === TAB_ID || ad.id === HANDLE_ID) return;
+    if (ad.classList.contains('ws-protected')) return;
 
     ad.style.display = 'none';
     count++;
@@ -550,16 +714,8 @@ async function crawlSiteToPdf(startUrl = window.location.href, maxPages = 20) {
 // Simple ad remover used when the user presses the "Remove Ads" button in the
 // popup.  It looks for elements that commonly contain advertisements and removes
 // them from the page.
-function removeAds(root = document) {
-  const selectors = [
-    '[id*="ad" i]',
-    '[class*="ad" i]',
-    'iframe[src*="ad" i]',
-    'iframe[src*="doubleclick" i]',
-    'iframe[src*="adservice" i]'
-  ];
-  root.querySelectorAll(selectors.join(',')).forEach(el => el.remove());
-}
+// Duplicate removeAds removed.
+// The correct version is defined above.
 
 // Attempt to extract the author name from common meta tags or byline elements
 function detectAuthor() {
