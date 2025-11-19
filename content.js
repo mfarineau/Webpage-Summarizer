@@ -515,12 +515,12 @@ async function injectSummaryWidget(selectionText, tone = 'Executive') {
 async function injectBiasWidget() {
   const old = document.getElementById('bias-widget');
   if (old) old.remove();
-  const { container, content } = createFloatingWidget('📰 Bias Analysis', '50vh');
+  const { container, content } = createFloatingWidget('📰 Bias Analysis', '60vh');
   container.id = 'bias-widget';
 
   const analyzingP = document.createElement('p');
   const analyzingEm = document.createElement('em');
-  analyzingEm.textContent = 'Analyzing...';
+  analyzingEm.textContent = 'Analyzing article and author...';
   analyzingP.appendChild(analyzingEm);
   content.appendChild(analyzingP);
 
@@ -533,20 +533,103 @@ async function injectBiasWidget() {
       return;
     }
 
+    let authorAnalysis = '';
+    if (author) {
+      try {
+        const biasInfo = await fetchAuthorBias(author, openai_api_key);
+        authorAnalysis = `\n\n### Author Context: ${author}\n${biasInfo}`;
+      } catch (err) {
+        console.error('Failed to fetch author bias:', err);
+        authorAnalysis = `\n\n(Could not fetch background info for author: ${author})`;
+      }
+    } else {
+      authorAnalysis = '\n\n(No author detected to analyze)';
+    }
+
     const messages = [
       {
         role: 'system',
-        content: 'You analyze political bias in news articles and respond concisely.'
+        content: 'You analyze political bias in news articles. Be objective and concise.'
       },
       {
         role: 'user',
-        content: `Analyze the political bias of the following article. Indicate if it leans left, right or is neutral and list signs of bias.\n\n${pageText.substring(0, 8000)}${author ? `\n\nThe author is "${author}". Research up to 25 recent articles by this author and provide an overall bias rating for the author's work.` : ''}`
+        content: `Analyze the political bias of the following article. Indicate if it leans left, right or is neutral and list signs of bias.\n\n${pageText.substring(0, 8000)}`
       }
     ];
 
-    const analysis = await fetchChatCompletion(messages, openai_api_key);
-    const formatted = formatSummary(analysis);
-    content.replaceChildren(formatted);
+    const articleAnalysis = await fetchChatCompletion(messages, openai_api_key);
+
+    // Combine the results
+    const combinedHtml = document.createDocumentFragment();
+
+    // 1. Article Analysis
+    const articleHeader = document.createElement('h3');
+    articleHeader.textContent = 'Article Analysis';
+    articleHeader.style.marginTop = '0';
+    combinedHtml.appendChild(articleHeader);
+    combinedHtml.appendChild(formatSummary(articleAnalysis));
+
+    // 2. Author Analysis (if available)
+    const authorHeader = document.createElement('h3');
+    authorHeader.textContent = 'Author Background';
+    authorHeader.style.marginTop = '16px';
+    combinedHtml.appendChild(authorHeader);
+
+    const authorDiv = document.createElement('div');
+    authorDiv.style.background = '#f5f5f5';
+    authorDiv.style.padding = '10px';
+    authorDiv.style.borderRadius = '8px';
+    authorDiv.style.fontSize = '0.95rem';
+
+    if (author) {
+      // We already have the text in authorAnalysis, let's just clean it up or re-fetch if needed.
+      // Actually, let's just display what we got from the separate lookup.
+      // The authorAnalysis string constructed above was a bit of a mix. Let's use the raw result.
+      // Re-fetching for clarity in this block:
+      const biasInfo = await fetchAuthorBias(author, openai_api_key);
+      authorDiv.innerHTML = `<strong>${author}</strong><br/>${biasInfo.replace(/\n/g, '<br/>')}`;
+    } else {
+      authorDiv.textContent = 'No author detected.';
+    }
+    combinedHtml.appendChild(authorDiv);
+
+    content.replaceChildren(combinedHtml);
+  });
+}
+
+// Check cache for author bias, otherwise query OpenAI
+async function fetchAuthorBias(authorName, apiKey) {
+  return new Promise((resolve) => {
+    const cacheKey = `bias_cache_${authorName.toLowerCase().replace(/\s+/g, '_')}`;
+
+    chrome.storage.local.get(cacheKey, async (result) => {
+      if (result[cacheKey]) {
+        console.log('Using cached bias for:', authorName);
+        resolve(result[cacheKey]);
+        return;
+      }
+
+      console.log('Fetching fresh bias for:', authorName);
+      const messages = [
+        {
+          role: 'system',
+          content: 'You are a political analyst. Determine if the following journalist/author typically leans left, right, or center in US politics. Provide a very brief 1-2 sentence summary of their known political stance or "Unknown" if not a public figure.'
+        },
+        {
+          role: 'user',
+          content: authorName
+        }
+      ];
+
+      const response = await fetchChatCompletion(messages, apiKey);
+
+      // Cache the result
+      const data = {};
+      data[cacheKey] = response;
+      chrome.storage.local.set(data);
+
+      resolve(response);
+    });
   });
 }
 
@@ -984,14 +1067,63 @@ function removeAds(root = document) {
 
 // Attempt to extract the author name from common meta tags or byline elements
 function detectAuthor() {
-  let author = document.querySelector("meta[name='author']")?.content;
-  if (author) {
-    return author.trim();
+  // 1. Meta tags
+  const metaSelectors = [
+    "meta[name='author']",
+    "meta[name='byl']",
+    "meta[property='article:author']",
+    "meta[property='og:author']",
+    "meta[name='twitter:creator']"
+  ];
+
+  for (const sel of metaSelectors) {
+    const content = document.querySelector(sel)?.content;
+    if (content && content.length < 100) return content.trim();
   }
 
-  const el = document.querySelector("[itemprop='author'] [itemprop='name'], [rel='author'], .byline, .author");
-  if (el) {
-    return el.textContent.trim();
+  // 2. Schema.org JSON-LD
+  try {
+    const scripts = document.querySelectorAll('script[type="application/ld+json"]');
+    for (const script of scripts) {
+      const data = JSON.parse(script.textContent);
+      // Handle both single object and array of objects
+      const objects = Array.isArray(data) ? data : [data];
+      for (const obj of objects) {
+        if (obj['@type'] === 'NewsArticle' || obj['@type'] === 'Article' || obj['@type'] === 'BlogPosting') {
+          if (obj.author) {
+            if (Array.isArray(obj.author)) {
+              return obj.author[0].name;
+            } else if (obj.author.name) {
+              return obj.author.name;
+            }
+          }
+        }
+      }
+    }
+  } catch (e) {
+    // Ignore JSON parse errors
+  }
+
+  // 3. Common visual selectors
+  const visualSelectors = [
+    "[itemprop='author'] [itemprop='name']",
+    "[rel='author']",
+    ".byline",
+    ".author",
+    ".author-name",
+    ".c-byline__item", // Common in some news sites
+    "a[href*='/author/']"
+  ];
+
+  for (const sel of visualSelectors) {
+    const el = document.querySelector(sel);
+    if (el) {
+      const text = el.textContent.trim();
+      // Basic validation to avoid capturing full paragraphs
+      if (text.length > 2 && text.length < 50 && !text.includes('\n')) {
+        return text;
+      }
+    }
   }
 
   return '';
