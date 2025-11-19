@@ -3,10 +3,19 @@
 // Manages side panel behavior and context menus.
 
 // Open Side Panel on Action Click
-chrome.runtime.onInstalled.addListener(() => {
-  chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true })
-    .catch((error) => console.error(error));
+// We use the imperative API for better reliability
+chrome.action.onClicked.addListener((tab) => {
+  // Check if the side panel API is available (Chrome 114+)
+  if (chrome.sidePanel && chrome.sidePanel.open) {
+    chrome.sidePanel.open({ windowId: tab.windowId });
+  } else {
+    // Fallback for older browsers or if API is missing (shouldn't happen in V3)
+    chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true });
+  }
+});
 
+chrome.runtime.onInstalled.addListener(() => {
+  // Ensure context menu is created
   chrome.contextMenus.create({
     id: 'summarize-selection',
     title: 'Summarize Selection',
