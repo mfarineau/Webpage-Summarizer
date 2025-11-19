@@ -10,16 +10,25 @@
     "contextMenus",
     "cookies",
     "contentSettings",
-    "downloads",
-    "side_panel"
+    "downloads"
   ],
   "action": {
     "default_title": "Open Webpage Summarizer",
     "default_icon": "icon.png"
   },
-  "side_panel": {
-    "default_path": "sidepanel.html"
-  },
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "sidebar.html",
+        "sidebar.js",
+        "style.css",
+        "sf-symbols.svg"
+      ],
+      "matches": [
+        "<all_urls>"
+      ]
+    }
+  ],
   "icons": {
     "16": "icon.png",
     "48": "icon.png",

@@ -76,9 +76,52 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       }
     })();
     return true;
+  } else if (message.action === 'toggle_sidebar') {
+    toggleSidebar();
   }
   return false;
 });
+
+let sidebarIframe = null;
+let sidebarOpen = false;
+
+function toggleSidebar() {
+  if (sidebarOpen) {
+    // Close
+    if (sidebarIframe) {
+      sidebarIframe.style.display = 'none';
+    }
+    document.body.style.marginRight = '0px';
+    document.body.style.width = '100%';
+    sidebarOpen = false;
+  } else {
+    // Open
+    if (!sidebarIframe) {
+      createSidebar();
+    }
+    sidebarIframe.style.display = 'block';
+    document.body.style.marginRight = '400px';
+    // Force width to shrink to avoid horizontal scroll if possible, 
+    // though margin-right usually handles flow. 
+    // Some sites might need width adjustment.
+    sidebarOpen = true;
+  }
+}
+
+function createSidebar() {
+  sidebarIframe = document.createElement('iframe');
+  sidebarIframe.src = chrome.runtime.getURL('sidebar.html');
+  sidebarIframe.style.position = 'fixed';
+  sidebarIframe.style.top = '0';
+  sidebarIframe.style.right = '0';
+  sidebarIframe.style.width = '400px';
+  sidebarIframe.style.height = '100%';
+  sidebarIframe.style.border = 'none';
+  sidebarIframe.style.zIndex = '2147483647'; // Max z-index
+  sidebarIframe.style.boxShadow = '-2px 0 5px rgba(0,0,0,0.2)';
+  sidebarIframe.style.background = '#fff'; // Default bg
+  document.body.appendChild(sidebarIframe);
+}
 
 
 // --- Helper Functions ---

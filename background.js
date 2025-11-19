@@ -2,12 +2,10 @@
 // -------------
 // Manages side panel behavior and context menus.
 
-// Open Side Panel on Action Click
-// We use the declarative API at the top level.
-// This ensures the browser knows to open the side panel when the icon is clicked.
-chrome.sidePanel
-  .setPanelBehavior({ openPanelOnActionClick: true })
-  .catch((error) => console.error(error));
+// Open Sidebar on Action Click
+chrome.action.onClicked.addListener((tab) => {
+  chrome.tabs.sendMessage(tab.id, { action: 'toggle_sidebar' });
+});
 
 chrome.runtime.onInstalled.addListener(() => {
   // Ensure context menu is created
