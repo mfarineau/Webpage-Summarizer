@@ -1,14 +1,16 @@
 <!DOCTYPE html>
 <html>
+
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <!-- Link in our popup specific styles -->
   <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
   <div id="toastContainer" class="ws-toast-stack" aria-live="polite" aria-atomic="false"></div>
-  
+
   <!-- Simple heading for the popup -->
   <h5 class="title">Summarize Page</h5>
 
@@ -25,22 +27,26 @@
     <label for="toneSelect" class="field-label">Tone</label>
     <select id="toneSelect">
       <option value="Executive">Executive</option>
-      <option value="Bullet Points">Bullet Points</option>
-      <option value="Casual">Casual</option>
+      <option value="Casual Read">Casual Read</option>
+      <option value="Academic Analysis">Academic Analysis</option>
     </select>
   </div>
 
   <!-- Primary action -->
   <div class="actions">
     <button id="summarizeBtn" class="btn primary">
-      <svg class="icon"><use href="sf-symbols.svg#doc.text.magnifyingglass"/></svg>
+      <svg class="icon">
+        <use href="sf-symbols.svg#doc.text.magnifyingglass" />
+      </svg>
       <span>Summarize Page</span>
     </button>
 
     <!-- Toggle for more actions -->
     <button id="toggleMoreBtn" class="btn tertiary">
       <span>More Actions</span>
-      <svg class="icon"><use href="sf-symbols.svg#chevron.down"/></svg>
+      <svg class="icon">
+        <use href="sf-symbols.svg#chevron.down" />
+      </svg>
     </button>
 
     <!-- Collapsible more actions section -->
@@ -53,57 +59,81 @@
 
       <div id="analysisGroup" class="actions action-group">
         <button id="summarizeSelectionBtn" class="btn secondary action-item">
-          <svg class="icon"><use href="sf-symbols.svg#text.badge.plus"/></svg>
+          <svg class="icon">
+            <use href="sf-symbols.svg#text.badge.plus" />
+          </svg>
           <span>Selection</span>
         </button>
         <button id="biasBtn" class="btn secondary action-item">
-          <svg class="icon"><use href="sf-symbols.svg#chart.bar"/></svg>
+          <svg class="icon">
+            <use href="sf-symbols.svg#chart.bar" />
+          </svg>
           <span>Bias</span>
         </button>
         <button id="detectFrameworkBtn" class="btn secondary action-item">
-          <svg class="icon"><use href="sf-symbols.svg#cpu"/></svg>
+          <svg class="icon">
+            <use href="sf-symbols.svg#cpu" />
+          </svg>
           <span>Framework</span>
         </button>
         <button id="lookupBtn" class="btn secondary action-item">
-          <svg class="icon"><use href="sf-symbols.svg#globe"/></svg>
+          <svg class="icon">
+            <use href="sf-symbols.svg#globe" />
+          </svg>
           <span>Domain</span>
         </button>
       </div>
 
       <div id="utilitiesGroup" class="actions action-group" hidden>
         <button id="removeAdsBtn" class="btn secondary action-item">
-          <svg class="icon"><use href="sf-symbols.svg#eye.slash"/></svg>
+          <svg class="icon">
+            <use href="sf-symbols.svg#eye.slash" />
+          </svg>
           <span>No Ads</span>
         </button>
         <button id="checkCookiesBtn" class="btn secondary action-item">
-          <svg class="icon"><use href="sf-symbols.svg#checkmark.shield"/></svg>
+          <svg class="icon">
+            <use href="sf-symbols.svg#checkmark.shield" />
+          </svg>
           <span>Cookies</span>
         </button>
         <button id="savePageBtn" class="btn secondary action-item">
-          <svg class="icon"><use href="sf-symbols.svg#square.and.arrow.down"/></svg>
+          <svg class="icon">
+            <use href="sf-symbols.svg#square.and.arrow.down" />
+          </svg>
           <span>Save</span>
         </button>
         <button id="crawlSiteBtn" class="btn secondary action-item">
-          <svg class="icon"><use href="sf-symbols.svg#square.and.arrow.down"/></svg>
+          <svg class="icon">
+            <use href="sf-symbols.svg#square.and.arrow.down" />
+          </svg>
           <span>PDF</span>
         </button>
         <button id="bypassBtn" class="btn secondary action-item">
-          <svg class="icon"><use href="sf-symbols.svg#arrowshape.turn.up.right"/></svg>
+          <svg class="icon">
+            <use href="sf-symbols.svg#arrowshape.turn.up.right" />
+          </svg>
           <span>Bypass JS</span>
         </button>
         <button id="enableJsBtn" class="btn secondary action-item">
-          <svg class="icon"><use href="sf-symbols.svg#curlybraces"/></svg>
+          <svg class="icon">
+            <use href="sf-symbols.svg#curlybraces" />
+          </svg>
           <span>Enable JS</span>
         </button>
         <button id="historyBtn" class="btn secondary action-item">
-          <svg class="icon"><use href="sf-symbols.svg#clock.arrow.circlepath"/></svg>
+          <svg class="icon">
+            <use href="sf-symbols.svg#clock.arrow.circlepath" />
+          </svg>
           <span>History</span>
         </button>
       </div>
 
       <div id="settingsGroup" class="actions action-group" hidden>
         <button id="saveKeyBtn" class="btn secondary action-item">
-          <svg class="icon"><use href="sf-symbols.svg#key"/></svg>
+          <svg class="icon">
+            <use href="sf-symbols.svg#key" />
+          </svg>
           <span>Save Key</span>
         </button>
       </div>
@@ -113,4 +143,5 @@
   <!-- The popup script handles button actions -->
   <script src="popup.js"></script>
 </body>
+
 </html>

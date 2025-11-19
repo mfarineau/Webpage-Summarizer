@@ -652,12 +652,13 @@ async function fetchChatCompletion(messages, apiKey) {
 
 function getSystemPrompt(tone) {
   switch (tone) {
-    case 'Bullet Points':
-      return 'You are a helpful assistant that summarizes web pages using clear and concise bullet points. You can also answer follow-up questions about the content.';
-    case 'Casual':
-      return 'You are a helpful assistant that summarizes web pages in a casual, conversational tone. You can also answer follow-up questions about the content.';
+    case 'Casual Read':
+      return 'You are a helpful assistant that summarizes web pages for a popular audience. Use a casual, conversational tone. Focus on the most interesting and engaging parts of the story.';
+    case 'Academic Analysis':
+      return 'You are an academic researcher. Summarize the article and frame it within the most relevant academic discipline (e.g., science, politics, sociology). If it is scientific, speculate on the impact to the scientific community and our understanding. If political, focus on the impact on the country\'s politics. Use a formal, analytical tone.';
+    case 'Executive':
     default:
-      return 'You are a helpful assistant that summarizes web pages in the style of an executive summary. You can also answer follow-up questions about the content.';
+      return 'You are an executive assistant. Provide a factual executive summary of the article. Focus on the key facts and takeaways. Use a professional, concise tone and format the output with clear bullet points.';
   }
 }
 
