@@ -153,10 +153,6 @@ function detectFramework() {
   if (window.WordPress) return 'WordPress';
   return 'Unknown/Custom';
 }
-  } catch (err) {
-  return '❌ Error connecting to API.';
-}
-}
 
 function getSystemPrompt(tone) {
   switch (tone) {
