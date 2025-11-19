@@ -345,10 +345,15 @@ async function injectSummaryWidget(selectionText, tone = 'Executive') {
   if (old) old.remove();
 
   // Build the widget container using the shared helper
-  const { container, content } = createFloatingWidget('🧠 Webpage Summary', '70vh');
+  const { container, content } = createFloatingWidget('🧠 Webpage Summary & Chat', '80vh');
   container.id = 'summary-widget';
   content.id = 'summary-content';
 
+  // Chat State
+  let chatHistory = [];
+  const pageText = selectionText || document.body.innerText;
+
+  // Initial Loading State
   const loadingP = document.createElement('p');
   const loadingEm = document.createElement('em');
   loadingEm.textContent = 'Summarizing...';
@@ -372,24 +377,138 @@ async function injectSummaryWidget(selectionText, tone = 'Executive') {
   // Insert images container before the content area
   container.insertBefore(imagesContainer, content);
 
-  // Grab the text to summarize. If a specific selection was provided use that,
-  // otherwise fall back to the full page text.
-  const pageText = selectionText || document.body.innerText;
+  // Chat Interface Elements
+  const chatContainer = document.createElement('div');
+  chatContainer.className = 'ws-chat-container';
+  chatContainer.style = 'margin-top: 16px; border-top: 1px solid #eee; padding-top: 12px; display: flex; flex-direction: column; gap: 8px;';
 
-  // Retrieve the user's OpenAI API key from extension storage. We need this
-  // key to make requests to the chat completion endpoint.
+  const chatLog = document.createElement('div');
+  chatLog.className = 'ws-chat-log';
+  chatLog.style = 'max-height: 200px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding-right: 4px;';
+
+  const inputArea = document.createElement('div');
+  inputArea.style = 'display: flex; gap: 8px;';
+
+  const chatInput = document.createElement('input');
+  chatInput.type = 'text';
+  chatInput.placeholder = 'Ask a follow-up question...';
+  chatInput.style = 'flex: 1; padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-family: inherit; font-size: 14px;';
+
+  const sendBtn = document.createElement('button');
+  sendBtn.textContent = 'Send';
+  sendBtn.style = 'background: #6200ee; color: white; border: none; border-radius: 4px; padding: 8px 12px; cursor: pointer; font-weight: 600;';
+
+  inputArea.appendChild(chatInput);
+  inputArea.appendChild(sendBtn);
+  chatContainer.appendChild(chatLog);
+  chatContainer.appendChild(inputArea);
+
+  // Retrieve the user's OpenAI API key from extension storage.
   chrome.storage.local.get('openai_api_key', async ({ openai_api_key }) => {
     if (!openai_api_key) {
-      // Tell the user we can't continue without an API key.
       content.innerText = '⚠️ No API key found. Please save it in the extension popup.';
       return;
     }
 
-    // Fetch the summary and update the widget with the formatted text
-    const summary = await fetchSummary(pageText, openai_api_key, tone);
+    // Initialize Chat History
+    chatHistory = [
+      {
+        role: 'system',
+        content: getSystemPrompt(tone)
+      },
+      {
+        role: 'user',
+        content: `Summarize this:\n\n${pageText.substring(0, 12000)}` // Increased limit slightly
+      }
+    ];
+
+    // Fetch the summary
+    const summary = await fetchChatCompletion(chatHistory, openai_api_key);
+
+    // Store summary in local history
+    const entry = {
+      url: window.location.href,
+      timestamp: Date.now(),
+      summary
+    };
+    chrome.storage.local.get({ summary_history: [] }, ({ summary_history }) => {
+      summary_history.push(entry);
+      chrome.storage.local.set({ summary_history });
+    });
+
+    // Update UI with Summary
     const formatted = formatSummary(summary);
     content.replaceChildren(formatted);
+
+    // Append Chat Interface
+    content.appendChild(chatContainer);
+
+    // Add summary to history
+    chatHistory.push({ role: 'assistant', content: summary });
+
+    // Chat Interaction Logic
+    const handleSend = async () => {
+      const question = chatInput.value.trim();
+      if (!question) return;
+
+      // Add User Message to UI
+      appendChatMessage('user', question);
+      chatInput.value = '';
+      chatInput.disabled = true;
+      sendBtn.disabled = true;
+
+      // Add User Message to History
+      chatHistory.push({ role: 'user', content: question });
+
+      // Show Typing Indicator
+      const typingId = appendChatMessage('assistant', 'Typing...');
+
+      // Fetch Response
+      const response = await fetchChatCompletion(chatHistory, openai_api_key);
+
+      // Update UI with Response
+      updateChatMessage(typingId, response);
+
+      // Add Assistant Message to History
+      chatHistory.push({ role: 'assistant', content: response });
+
+      chatInput.disabled = false;
+      sendBtn.disabled = false;
+      chatInput.focus();
+    };
+
+    sendBtn.addEventListener('click', handleSend);
+    chatInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') handleSend();
+    });
   });
+
+  function appendChatMessage(role, text) {
+    const msgDiv = document.createElement('div');
+    const id = Date.now().toString();
+    msgDiv.id = id;
+    msgDiv.style = `
+      padding: 8px 12px;
+      border-radius: 8px;
+      max-width: 85%;
+      font-size: 14px;
+      line-height: 1.4;
+      ${role === 'user'
+        ? 'align-self: flex-end; background: #6200ee; color: white;'
+        : 'align-self: flex-start; background: #f0f0f0; color: #333;'}
+    `;
+    msgDiv.textContent = text;
+    chatLog.appendChild(msgDiv);
+    chatLog.scrollTop = chatLog.scrollHeight;
+    return id;
+  }
+
+  function updateChatMessage(id, text) {
+    const msgDiv = document.getElementById(id);
+    if (msgDiv) {
+      msgDiv.textContent = text;
+    }
+  }
 }
 
 // Creates and displays a bias analysis widget on the page.
@@ -414,16 +533,25 @@ async function injectBiasWidget() {
       return;
     }
 
-    const analysis = await fetchBias(pageText, openai_api_key, author);
+    const messages = [
+      {
+        role: 'system',
+        content: 'You analyze political bias in news articles and respond concisely.'
+      },
+      {
+        role: 'user',
+        content: `Analyze the political bias of the following article. Indicate if it leans left, right or is neutral and list signs of bias.\n\n${pageText.substring(0, 8000)}${author ? `\n\nThe author is "${author}". Research up to 25 recent articles by this author and provide an overall bias rating for the author's work.` : ''}`
+      }
+    ];
+
+    const analysis = await fetchChatCompletion(messages, openai_api_key);
     const formatted = formatSummary(analysis);
     content.replaceChildren(formatted);
   });
 }
 
-// Calls the OpenAI API to generate a summary for the provided text.
-// Returns the summary string on success or an error message on failure.
-async function fetchSummary(text, apiKey, tone = 'Executive') {
-  let summary;
+// Generic function to call OpenAI Chat Completion API
+async function fetchChatCompletion(messages, apiKey) {
   try {
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -433,92 +561,32 @@ async function fetchSummary(text, apiKey, tone = 'Executive') {
       },
       body: JSON.stringify({
         model: 'gpt-4',
-        messages: [
-          {
-            role: 'system',
-            content: getSystemPrompt(tone)
-          },
-          {
-            role: 'user',
-            content: `Summarize this:\n\n${text.substring(0, 8000)}`
-          }
-        ],
+        messages: messages,
         temperature: 0.5
       }),
     });
 
-    // The API returns an object with an array of choices. We take the first
-    // choice's message content as our summary.
     if (!response.ok) {
-      summary = `❌ Error fetching summary. (${response.status})`;
-    } else {
-      const data = await response.json();
-      summary = data.choices?.[0]?.message?.content || '❌ No summary returned.';
-    }
-  } catch (err) {
-    // Handle errors such as network failures or invalid API keys
-    summary = '❌ Error fetching summary.';
-  }
-
-  // Store summary in local history
-  const entry = {
-    url: window.location.href,
-    timestamp: Date.now(),
-    summary
-  };
-  chrome.storage.local.get({ summary_history: [] }, ({ summary_history }) => {
-    summary_history.push(entry);
-    chrome.storage.local.set({ summary_history });
-  });
-
-  return summary;
-}
-
-// Call OpenAI to analyze the political bias of the text.
-async function fetchBias(text, apiKey, author = '') {
-  try {
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'gpt-4',
-        messages: [
-          {
-            role: 'system',
-            content: 'You analyze political bias in news articles and respond concisely.'
-          },
-          {
-            role: 'user',
-            content: `Analyze the political bias of the following article. Indicate if it leans left, right or is neutral and list signs of bias.\n\n${text.substring(0, 8000)}${author ? `\n\nThe author is "${author}". Research up to 25 recent articles by this author and provide an overall bias rating for the author's work.` : ''}`
-          }
-        ],
-        temperature: 0
-      }),
-    });
-
-    if (!response.ok) {
-      return `❌ Error analyzing bias. (${response.status})`;
+      return `❌ Error. (${response.status})`;
     }
     const data = await response.json();
-    return data.choices?.[0]?.message?.content || '❌ No analysis returned.';
+    return data.choices?.[0]?.message?.content || '❌ No response.';
   } catch (err) {
-    return '❌ Error analyzing bias.';
+    return '❌ Error connecting to API.';
   }
 }
 
 function getSystemPrompt(tone) {
   switch (tone) {
     case 'Bullet Points':
-      return 'You are a helpful assistant that summarizes web pages using clear and concise bullet points.';
+      return 'You are a helpful assistant that summarizes web pages using clear and concise bullet points. You can also answer follow-up questions about the content.';
     case 'Casual':
-      return 'You are a helpful assistant that summarizes web pages in a casual, conversational tone.';
+      return 'You are a helpful assistant that summarizes web pages in a casual, conversational tone. You can also answer follow-up questions about the content.';
     default:
-      return 'You are a helpful assistant that summarizes web pages in the style of an executive summary.';
+      return 'You are a helpful assistant that summarizes web pages in the style of an executive summary. You can also answer follow-up questions about the content.';
   }
 }
+
 // Takes the raw summary text returned from the API and converts it into
 // simple HTML. This allows us to keep sections and bullet points looking
 // nice inside the widget.
