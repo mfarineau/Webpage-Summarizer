@@ -11,7 +11,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     const framework = detectFramework();
     sendResponse({ text, author, framework });
   } else if (message.action === 'remove_ads') {
-    removeAds();
+    const adsHidden = toggleAds();
+    sendResponse({ adsHidden });
+  } else if (message.action === 'save_page') {
+    savePage();
+    sendResponse({ ok: true });
   } else if (message.action === 'crawl_site_pdf') {
     (async () => {
       try {
@@ -239,6 +243,10 @@ function createResizeHandle() {
   document.body.appendChild(resizeHandle);
 }
 
+// Ad removal state tracking
+let adsHidden = false;
+const hiddenAdsMap = new WeakMap(); // Store original display values
+
 function removeAds() {
   const adSelectors = [
     'iframe[src*="ads"]',
@@ -255,13 +263,54 @@ function removeAds() {
     if (ad.id === SIDEBAR_ID || ad.id === TAB_ID || ad.id === HANDLE_ID) return;
     if (ad.classList.contains('ws-protected')) return;
 
+    // Store original display value
+    const originalDisplay = window.getComputedStyle(ad).display;
+    hiddenAdsMap.set(ad, originalDisplay);
     ad.style.display = 'none';
     count++;
   });
   console.log(`Removed ${count} ad elements.`);
+  adsHidden = true;
+}
+
+function restoreAds() {
+  const adSelectors = [
+    'iframe[src*="ads"]',
+    'div[class*="ad-"]',
+    'div[id*="ad-"]',
+    'aside',
+    '.advertisement',
+    '.ad-container'
+  ];
+  const ads = document.querySelectorAll(adSelectors.join(','));
+  let count = 0;
+  ads.forEach(ad => {
+    if (hiddenAdsMap.has(ad)) {
+      const originalDisplay = hiddenAdsMap.get(ad);
+      ad.style.display = originalDisplay;
+      hiddenAdsMap.delete(ad);
+      count++;
+    }
+  });
+  console.log(`Restored ${count} ad elements.`);
+  adsHidden = false;
+}
+
+function toggleAds() {
+  if (adsHidden) {
+    restoreAds();
+  } else {
+    removeAds();
+  }
+  return adsHidden;
 }
 
 // --- Helper Functions ---
+
+// Stub for old notification system (used by PDF crawler)
+function showContentNotification(message, type, duration) {
+  console.log(`[${type}] ${message}`);
+}
 
 function detectAuthor() {
   // 1. Meta tags
@@ -381,10 +430,7 @@ function savePage() {
     chrome.storage.local.set({ page_history }, () => {
       if (chrome.runtime.lastError) {
         console.error('Failed to save page to history:', chrome.runtime.lastError);
-        showContentNotification('Failed to save page.', 'error');
-        return;
       }
-      showContentNotification('Page saved!', 'success');
     });
   });
 }
