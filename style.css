@@ -10,23 +10,25 @@
   --glass-surface: rgba(255, 255, 255, 0.05);
   --glass-border: rgba(255, 255, 255, 0.1);
   --glass-highlight: rgba(255, 255, 255, 0.15);
-  
-  --primary-accent: #b000e6; /* Neon Purple */
+
+  --primary-accent: #b000e6;
+  /* Neon Purple */
   --primary-gradient: linear-gradient(135deg, #b000e6, #7c4dff);
-  --secondary-accent: #00d2ff; /* Neon Blue */
-  
+  --secondary-accent: #00d2ff;
+  /* Neon Blue */
+
   --text-main: #ffffff;
   --text-muted: rgba(255, 255, 255, 0.7);
   --text-placeholder: rgba(255, 255, 255, 0.4);
-  
+
   --success-color: #00e676;
   --error-color: #ff1744;
   --info-color: #2979ff;
-  
+
   --radius-sm: 8px;
   --radius-md: 12px;
   --radius-lg: 16px;
-  
+
   --shadow-sm: 0 4px 6px rgba(0, 0, 0, 0.1);
   --shadow-md: 0 8px 16px rgba(0, 0, 0, 0.2);
   --shadow-glow: 0 0 15px rgba(124, 77, 255, 0.3);
@@ -38,7 +40,8 @@ body {
   font-family: var(--font-family);
   margin: 0;
   padding: 20px;
-  width: 380px; /* Slightly wider for better layout */
+  width: 380px;
+  /* Slightly wider for better layout */
   background: var(--bg-gradient);
   color: var(--text-main);
   min-height: 500px;
@@ -53,6 +56,7 @@ h5.title {
   letter-spacing: -0.5px;
   background: linear-gradient(to right, #fff, #a5a5a5);
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
   text-align: center;
 }
@@ -122,8 +126,13 @@ select {
   pointer-events: none;
 }
 
-.status-saved { color: var(--success-color); }
-.status-missing { color: var(--error-color); }
+.status-saved {
+  color: var(--success-color);
+}
+
+.status-missing {
+  color: var(--error-color);
+}
 
 /* Buttons */
 .btn {
@@ -167,7 +176,8 @@ select {
 }
 
 /* Secondary/Tertiary Buttons */
-.btn.secondary, .btn.tertiary {
+.btn.secondary,
+.btn.tertiary {
   background: var(--glass-surface);
   border: 1px solid var(--glass-border);
   color: var(--text-main);
@@ -175,7 +185,8 @@ select {
   padding: 10px;
 }
 
-.btn.secondary:hover, .btn.tertiary:hover {
+.btn.secondary:hover,
+.btn.tertiary:hover {
   background: var(--glass-highlight);
   border-color: rgba(255, 255, 255, 0.3);
 }
@@ -235,7 +246,7 @@ select {
 .segmented-control .segment.active {
   background: var(--glass-highlight);
   color: var(--text-main);
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 /* Action Grid for Secondary Items */
@@ -243,6 +254,10 @@ select {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 10px;
+}
+
+.action-group[hidden] {
+  display: none !important;
 }
 
 .action-item {
@@ -299,9 +314,17 @@ select {
   transform: translateY(0);
 }
 
-.ws-toast--success { border-left: 4px solid var(--success-color); }
-.ws-toast--error { border-left: 4px solid var(--error-color); }
-.ws-toast--info { border-left: 4px solid var(--info-color); }
+.ws-toast--success {
+  border-left: 4px solid var(--success-color);
+}
+
+.ws-toast--error {
+  border-left: 4px solid var(--error-color);
+}
+
+.ws-toast--info {
+  border-left: 4px solid var(--info-color);
+}
 
 /* Modal */
 .modal-overlay {
