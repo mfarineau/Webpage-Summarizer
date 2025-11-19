@@ -3,9 +3,10 @@
 // Manages side panel behavior and context menus.
 
 // Open Side Panel on Action Click
-chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true });
-
 chrome.runtime.onInstalled.addListener(() => {
+  chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true })
+    .catch((error) => console.error(error));
+
   chrome.contextMenus.create({
     id: 'summarize-selection',
     title: 'Summarize Selection',
