@@ -1,7 +1,7 @@
 // content.js
 // ----------
 // Content script that runs on webpages.
-// It acts as a data provider for the Injected Sidebar and handles ad removal.
+// It acts as a data provider for the Side Panel and handles ad removal.
 
 // Listen for messages from the Sidebar or Background script
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
@@ -28,226 +28,15 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       }
     })();
     return true;
-  } else if (message.action === 'toggle_sidebar') {
-    toggleSidebar();
   }
   return false;
 });
-
-let sidebarIframe = null;
-let sidebarTab = null;
-let resizeHandle = null;
-let sidebarOpen = false;
-let sidebarWidth = 400; // Default width
-
-const SIDEBAR_ID = 'webpage-summarizer-sidebar';
-const TAB_ID = 'webpage-summarizer-tab';
-const HANDLE_ID = 'webpage-summarizer-handle';
-
-// Inject CSS for Sidebar, Tab, and Handle
-const SIDEBAR_STYLES = `
-  #${SIDEBAR_ID} {
-    position: fixed;
-    top: 0;
-    right: 0;
-    height: 100%;
-    border: none;
-    z-index: 2147483647;
-    box-shadow: -2px 0 10px rgba(0,0,0,0.2);
-    background: #fff;
-    transform: translateX(100%);
-    transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-  }
-  #${SIDEBAR_ID}.ws-open {
-    transform: translateX(0);
-  }
-  #${TAB_ID} {
-    position: fixed;
-    top: 50%;
-    right: 0;
-    transform: translateY(-50%);
-    width: 40px;
-    height: 40px;
-    background: linear-gradient(135deg, #b000e6, #7c4dff);
-    border-radius: 8px 0 0 8px;
-    cursor: pointer;
-    z-index: 2147483648;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: -2px 2px 5px rgba(0,0,0,0.2);
-    transition: right 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-  }
-  #${TAB_ID}:hover {
-    width: 48px;
-  }
-  #${TAB_ID} svg {
-    width: 24px;
-    height: 24px;
-    fill: white;
-  }
-  #${HANDLE_ID} {
-    position: fixed;
-    top: 0;
-    right: 400px; /* Matches initial width */
-    width: 10px;
-    height: 100%;
-    cursor: col-resize;
-    z-index: 2147483648;
-    display: none; /* Hidden when sidebar is closed */
-  }
-  #${HANDLE_ID}:hover {
-    background: rgba(176, 0, 230, 0.1);
-  }
-`;
-
-function injectSidebarStyles() {
-  if (document.getElementById('ws-sidebar-styles')) return;
-  const style = document.createElement('style');
-  style.id = 'ws-sidebar-styles';
-  style.textContent = SIDEBAR_STYLES;
-  document.head.appendChild(style);
-}
-
-// Initialize on load
-injectSidebarStyles();
-createSidebarTab();
-
-function toggleSidebar() {
-  if (!sidebarIframe) createSidebar();
-  if (!resizeHandle) createResizeHandle();
-
-  sidebarOpen = !sidebarOpen;
-
-  if (sidebarOpen) {
-    // Open
-    sidebarIframe.classList.add('ws-open');
-    sidebarTab.style.right = `${sidebarWidth}px`;
-    resizeHandle.style.display = 'block';
-    resizeHandle.style.right = `${sidebarWidth}px`;
-    document.body.style.marginRight = `${sidebarWidth}px`;
-    document.body.style.transition = 'margin-right 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)';
-
-    // Update Tab Icon to 'Close' (X)
-    sidebarTab.innerHTML = `
-      <svg viewBox="0 0 24 24">
-        <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
-      </svg>
-    `;
-  } else {
-    // Close
-    sidebarIframe.classList.remove('ws-open');
-    sidebarTab.style.right = '0';
-    resizeHandle.style.display = 'none';
-    document.body.style.marginRight = '0';
-
-    // Update Tab Icon to 'Folder'/Menu
-    sidebarTab.innerHTML = `
-      <svg viewBox="0 0 24 24">
-        <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/>
-      </svg>
-    `;
-  }
-}
-
-function createSidebar() {
-  // Check if already exists
-  if (document.getElementById(SIDEBAR_ID)) {
-    sidebarIframe = document.getElementById(SIDEBAR_ID);
-    return;
-  }
-
-  sidebarIframe = document.createElement('iframe');
-  sidebarIframe.id = SIDEBAR_ID;
-  sidebarIframe.classList.add('ws-protected'); // Protect from ad blocker
-  sidebarIframe.src = chrome.runtime.getURL('sidebar.html');
-  sidebarIframe.style.width = `${sidebarWidth}px`;
-  document.body.appendChild(sidebarIframe);
-}
-
-function createSidebarTab() {
-  if (document.getElementById(TAB_ID)) {
-    sidebarTab = document.getElementById(TAB_ID);
-    return;
-  }
-
-  sidebarTab = document.createElement('div');
-  sidebarTab.id = TAB_ID;
-  sidebarTab.classList.add('ws-protected'); // Protect from ad blocker
-  sidebarTab.title = 'Toggle Webpage Summarizer';
-  sidebarTab.innerHTML = `
-    <svg viewBox="0 0 24 24">
-      <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/>
-    </svg>
-  `;
-  sidebarTab.addEventListener('click', toggleSidebar);
-  document.body.appendChild(sidebarTab);
-}
-
-function createResizeHandle() {
-  if (document.getElementById(HANDLE_ID)) {
-    resizeHandle = document.getElementById(HANDLE_ID);
-    return;
-  }
-
-  resizeHandle = document.createElement('div');
-  resizeHandle.id = HANDLE_ID;
-  resizeHandle.classList.add('ws-protected'); // Protect from ad blocker
-
-  let isResizing = false;
-  let animationFrameId = null;
-
-  resizeHandle.addEventListener('mousedown', (e) => {
-    isResizing = true;
-    document.body.style.userSelect = 'none'; // Prevent selection while dragging
-    sidebarIframe.style.pointerEvents = 'none'; // Prevent iframe stealing mouse events
-
-    // Disable transitions for instant feedback
-    sidebarIframe.style.transition = 'none';
-    sidebarTab.style.transition = 'none';
-    document.body.style.transition = 'none';
-  });
-
-  document.addEventListener('mousemove', (e) => {
-    if (!isResizing) return;
-
-    if (animationFrameId) cancelAnimationFrame(animationFrameId);
-
-    animationFrameId = requestAnimationFrame(() => {
-      const newWidth = window.innerWidth - e.clientX;
-      if (newWidth > 250 && newWidth < 800) { // Min/Max constraints
-        sidebarWidth = newWidth;
-        sidebarIframe.style.width = `${sidebarWidth}px`;
-        resizeHandle.style.right = `${sidebarWidth}px`;
-        sidebarTab.style.right = `${sidebarWidth}px`;
-        document.body.style.marginRight = `${sidebarWidth}px`;
-      }
-    });
-  });
-
-  document.addEventListener('mouseup', () => {
-    if (isResizing) {
-      isResizing = false;
-      if (animationFrameId) cancelAnimationFrame(animationFrameId);
-
-      document.body.style.userSelect = '';
-      sidebarIframe.style.pointerEvents = '';
-
-      // Re-enable transitions (clear inline style so CSS class takes over)
-      sidebarIframe.style.transition = '';
-      sidebarTab.style.transition = '';
-      document.body.style.transition = 'margin-right 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)';
-    }
-  });
-
-  document.body.appendChild(resizeHandle);
-}
 
 // Ad removal state tracking
 let adsHidden = false;
 const hiddenAdsMap = new WeakMap(); // Store original display values
 
-function removeAds() {
+function removeAds(root = document) {
   const adSelectors = [
     'iframe[src*="ads"]',
     'div[class*="ad-"]',
@@ -256,13 +45,9 @@ function removeAds() {
     '.advertisement',
     '.ad-container'
   ];
-  const ads = document.querySelectorAll(adSelectors.join(','));
+  const ads = root.querySelectorAll(adSelectors.join(','));
   let count = 0;
   ads.forEach(ad => {
-    // Explicitly exclude our sidebar elements by ID and Class
-    if (ad.id === SIDEBAR_ID || ad.id === TAB_ID || ad.id === HANDLE_ID) return;
-    if (ad.classList.contains('ws-protected')) return;
-
     // Store original display value
     const originalDisplay = window.getComputedStyle(ad).display;
     hiddenAdsMap.set(ad, originalDisplay);
@@ -273,7 +58,7 @@ function removeAds() {
   adsHidden = true;
 }
 
-function restoreAds() {
+function restoreAds(root = document) {
   const adSelectors = [
     'iframe[src*="ads"]',
     'div[class*="ad-"]',
@@ -282,7 +67,7 @@ function restoreAds() {
     '.advertisement',
     '.ad-container'
   ];
-  const ads = document.querySelectorAll(adSelectors.join(','));
+  const ads = root.querySelectorAll(adSelectors.join(','));
   let count = 0;
   ads.forEach(ad => {
     if (hiddenAdsMap.has(ad)) {
@@ -310,61 +95,6 @@ function toggleAds() {
 // Stub for old notification system (used by PDF crawler)
 function showContentNotification(message, type, duration) {
   console.log(`[${type}] ${message}`);
-}
-
-function detectAuthor() {
-  // 1. Meta tags
-  let author = document.querySelector("meta[name='author']")?.content ||
-    document.querySelector("meta[name='byl']")?.content ||
-    document.querySelector("meta[property='article:author']")?.content ||
-    document.querySelector("meta[property='og:author']")?.content ||
-    document.querySelector("meta[name='twitter:creator']")?.content;
-
-  if (author) return author.trim();
-
-  // 2. JSON-LD Schema
-  const scripts = document.querySelectorAll('script[type="application/ld+json"]');
-  for (const script of scripts) {
-    try {
-      const json = JSON.parse(script.textContent);
-      const data = Array.isArray(json) ? json : [json];
-      for (const item of data) {
-        if (['NewsArticle', 'Article', 'BlogPosting'].includes(item['@type'])) {
-          if (item.author) {
-            if (Array.isArray(item.author)) {
-              return item.author.map(a => a.name).join(', ');
-            } else if (item.author.name) {
-              return item.author.name;
-            }
-          }
-        }
-      }
-    } catch (e) { /* ignore parse errors */ }
-  }
-
-  // 3. Visual Selectors
-  const el = document.querySelector("[itemprop='author'] [itemprop='name']") ||
-    document.querySelector("[rel='author']") ||
-    document.querySelector(".byline") ||
-    document.querySelector(".author") ||
-    document.querySelector(".author-name") ||
-    document.querySelector(".c-byline__item") ||
-    document.querySelector("a[href*='/author/']");
-
-  if (el) return el.textContent.trim();
-
-  return '';
-}
-
-function detectFramework() {
-  // Simple framework detection based on global variables or specific DOM elements
-  if (document.querySelector('[id^="react-root"], [data-reactroot]')) return 'React';
-  if (document.querySelector('app-root, [ng-version]')) return 'Angular';
-  if (document.querySelector('[id="__next"]')) return 'Next.js';
-  if (document.querySelector('[data-v-app]')) return 'Vue.js';
-  if (window.jQuery) return 'jQuery';
-  if (window.WordPress) return 'WordPress';
-  return 'Unknown/Custom';
 }
 
 function getSystemPrompt(tone) {
@@ -756,12 +486,6 @@ async function crawlSiteToPdf(startUrl = window.location.href, maxPages = 20) {
     throw error;
   }
 }
-
-// Simple ad remover used when the user presses the "Remove Ads" button in the
-// popup.  It looks for elements that commonly contain advertisements and removes
-// them from the page.
-// Duplicate removeAds removed.
-// The correct version is defined above.
 
 // Attempt to extract the author name from common meta tags or byline elements
 function detectAuthor() {

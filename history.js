@@ -1,94 +1,182 @@
 // history.js
-// Displays stored summaries and allows deleting entries.
+// ----------
+// Manages the History Dashboard logic.
 
 document.addEventListener('DOMContentLoaded', () => {
-  const list = document.getElementById('historyList');
-  const pageList = document.getElementById('pageList');
+  // UI Elements
+  const navSummaries = document.getElementById('navSummaries');
+  const navPages = document.getElementById('navPages');
+  const pageTitle = document.getElementById('pageTitle');
+  const searchInput = document.getElementById('searchInput');
+  const contentGrid = document.getElementById('contentGrid');
+  const clearAllBtn = document.getElementById('clearAllBtn');
 
-  function renderSummaries(history) {
-    list.innerHTML = '';
-    history.forEach((item, idx) => {
-      const li = document.createElement('li');
-      li.className = 'history-item';
+  // Modal Elements
+  const viewerModal = document.getElementById('viewerModal');
+  const modalTitle = document.getElementById('modalTitle');
+  const modalBody = document.getElementById('modalBody');
+  const modalLink = document.getElementById('modalLink');
+  const closeModalBtn = document.getElementById('closeModalBtn');
 
-      const topDiv = document.createElement('div');
-      const link = document.createElement('a');
-      link.href = item.url;
-      link.target = '_blank';
-      link.textContent = item.url;
-      topDiv.appendChild(link);
-      topDiv.appendChild(document.createTextNode(` - ${new Date(item.timestamp).toLocaleString()}`));
+  // State
+  let currentView = 'summaries'; // 'summaries' | 'pages'
+  let allData = [];
+  let searchQuery = '';
 
-      const summaryDiv = document.createElement('div');
-      summaryDiv.textContent = item.summary;
+  // --- Initialization ---
+  loadData();
 
-      const delBtn = document.createElement('button');
-      delBtn.dataset.index = idx;
-      delBtn.className = 'btn tertiary';
-      delBtn.textContent = 'Delete';
+  // --- Event Listeners ---
+  navSummaries.addEventListener('click', () => switchView('summaries'));
+  navPages.addEventListener('click', () => switchView('pages'));
 
-      li.appendChild(topDiv);
-      li.appendChild(summaryDiv);
-      li.appendChild(delBtn);
-      list.appendChild(li);
-    });
-  }
-
-  function renderPages(pages) {
-    pageList.innerHTML = '';
-    pages.forEach((item, idx) => {
-      const li = document.createElement('li');
-      li.className = 'history-item';
-
-      const blob = new Blob([item.content], { type: 'text/html' });
-      const viewUrl = URL.createObjectURL(blob);
-
-      const topDiv = document.createElement('div');
-      const link = document.createElement('a');
-      link.href = item.url;
-      link.target = '_blank';
-      link.textContent = item.url;
-      topDiv.appendChild(link);
-      topDiv.appendChild(document.createTextNode(` - ${new Date(item.timestamp).toLocaleString()}`));
-
-      const iframe = document.createElement('iframe');
-      iframe.src = viewUrl;
-      iframe.className = 'saved-page-frame';
-
-      const delBtn = document.createElement('button');
-      delBtn.dataset.index = idx;
-      delBtn.className = 'btn tertiary delete';
-      delBtn.textContent = 'Delete';
-
-      li.appendChild(topDiv);
-      li.appendChild(iframe);
-      li.appendChild(delBtn);
-      pageList.appendChild(li);
-    });
-  }
-
-  chrome.storage.local.get({ summary_history: [], page_history: [] }, ({ summary_history, page_history }) => {
-    renderSummaries(summary_history);
-    renderPages(page_history);
+  searchInput.addEventListener('input', (e) => {
+    searchQuery = e.target.value.toLowerCase();
+    renderGrid();
   });
 
-  list.addEventListener('click', (e) => {
-    if (e.target.tagName === 'BUTTON') {
-      const idx = parseInt(e.target.dataset.index, 10);
-      chrome.storage.local.get({ summary_history: [] }, ({ summary_history }) => {
-        summary_history.splice(idx, 1);
-        chrome.storage.local.set({ summary_history }, () => renderSummaries(summary_history));
+  clearAllBtn.addEventListener('click', () => {
+    if (confirm(`Are you sure you want to delete all ${currentView === 'summaries' ? 'summaries' : 'saved pages'}?`)) {
+      const key = currentView === 'summaries' ? 'summary_history' : 'page_history';
+      chrome.storage.local.set({ [key]: [] }, () => {
+        loadData();
       });
     }
   });
 
-  pageList.addEventListener('click', (e) => {
-    if (e.target.classList.contains('delete')) {
-      const idx = parseInt(e.target.dataset.index, 10);
-      chrome.storage.local.get({ page_history: [] }, ({ page_history }) => {
-        page_history.splice(idx, 1);
-        chrome.storage.local.set({ page_history }, () => renderPages(page_history));
-      });
-    }
+  closeModalBtn.addEventListener('click', closeModal);
+  viewerModal.addEventListener('click', (e) => {
+    if (e.target === viewerModal) closeModal();
   });
+
+  // --- Core Functions ---
+
+  function switchView(view) {
+    currentView = view;
+
+    // Update Nav
+    navSummaries.classList.toggle('active', view === 'summaries');
+    navPages.classList.toggle('active', view === 'pages');
+
+    // Update Header
+    pageTitle.textContent = view === 'summaries' ? 'Summaries' : 'Saved Pages';
+
+    loadData();
+  }
+
+  function loadData() {
+    const key = currentView === 'summaries' ? 'summary_history' : 'page_history';
+    chrome.storage.local.get({ [key]: [] }, (result) => {
+      allData = result[key] || [];
+      // Sort by newest first
+      allData.sort((a, b) => b.timestamp - a.timestamp);
+      renderGrid();
+    });
+  }
+
+  function renderGrid() {
+    contentGrid.innerHTML = '';
+
+    const filtered = allData.filter(item => {
+      if (!searchQuery) return true;
+      const text = (item.url + (item.summary || '') + (item.title || '')).toLowerCase();
+      return text.includes(searchQuery);
+    });
+
+    if (filtered.length === 0) {
+      contentGrid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: var(--text-muted); padding: 40px;">No items found.</div>';
+      return;
+    }
+
+    filtered.forEach((item, index) => {
+      const card = document.createElement('div');
+      card.className = 'history-card';
+
+      const date = new Date(item.timestamp).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+      const urlObj = new URL(item.url);
+      const domain = urlObj.hostname.replace('www.', '');
+
+      let contentPreview = '';
+      let actionBtn = '';
+
+      if (currentView === 'summaries') {
+        contentPreview = `<div class="card-preview">${item.summary}</div>`;
+        actionBtn = `<button class="btn secondary small-btn read-btn">Read</button>`;
+      } else {
+        contentPreview = `<div class="card-preview">Saved HTML content from ${domain}</div>`;
+        actionBtn = `<button class="btn secondary small-btn view-btn">View</button>`;
+      }
+
+      card.innerHTML = `
+                <div class="card-header">
+                    <h4 class="card-title">${item.title || domain}</h4>
+                    <span class="card-date">${date}</span>
+                </div>
+                <div class="card-domain">${domain}</div>
+                ${contentPreview}
+                <div class="card-actions">
+                    ${actionBtn}
+                    <button class="btn-icon delete-btn" title="Delete">
+                        <svg class="icon"><use href="sf-symbols.svg#trash" /></svg>
+                    </button>
+                </div>
+            `;
+
+      // Attach Listeners
+      card.querySelector('.delete-btn').addEventListener('click', (e) => {
+        e.stopPropagation();
+        deleteItem(item);
+      });
+
+      if (currentView === 'summaries') {
+        card.querySelector('.read-btn').addEventListener('click', () => openSummaryModal(item));
+      } else {
+        card.querySelector('.view-btn').addEventListener('click', () => openPageModal(item));
+      }
+
+      contentGrid.appendChild(card);
+    });
+  }
+
+  function deleteItem(itemToDelete) {
+    if (!confirm('Delete this item?')) return;
+
+    const key = currentView === 'summaries' ? 'summary_history' : 'page_history';
+    const newData = allData.filter(i => i.timestamp !== itemToDelete.timestamp);
+
+    chrome.storage.local.set({ [key]: newData }, () => {
+      loadData();
+    });
+  }
+
+  // --- Modal Logic ---
+
+  function openSummaryModal(item) {
+    modalTitle.textContent = 'Summary';
+    modalBody.innerHTML = formatSummary(item.summary);
+    modalLink.href = item.url;
+    viewerModal.hidden = false;
+  }
+
+  function openPageModal(item) {
+    modalTitle.textContent = 'Saved Page';
+    modalLink.href = item.url;
+
+    // Create blob for iframe
+    const blob = new Blob([item.content], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+
+    modalBody.innerHTML = `<iframe src="${url}" class="saved-page-frame"></iframe>`;
+    viewerModal.hidden = false;
+  }
+
+  function closeModal() {
+    viewerModal.hidden = true;
+    modalBody.innerHTML = ''; // Clear content (stops iframe)
+  }
+
+  // Helper: Format Summary Text to HTML (Reused)
+  function formatSummary(text) {
+    return text.split(/\n{2,}/).map(p => `<p>${p}</p>`).join('');
+  }
 });

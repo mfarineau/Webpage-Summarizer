@@ -70,6 +70,12 @@ document.addEventListener('DOMContentLoaded', () => {
         settingsPanel.hidden = !settingsPanel.hidden;
     });
 
+    document.getElementById('apiKeyBtn').addEventListener('click', () => {
+        const settingsPanel = document.getElementById('settingsPanel');
+        settingsPanel.hidden = false;
+        settingsPanel.scrollIntoView({ behavior: 'smooth' });
+    });
+
     // --- OpenAI Helpers ---
     async function fetchChatCompletion(messages) {
         if (!currentApiKey) {
@@ -115,12 +121,23 @@ document.addEventListener('DOMContentLoaded', () => {
     async function getPageContent() {
         const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
         if (!tab) return null;
+
+        // Check for restricted protocols
+        if (!tab.url.startsWith('http')) {
+            showToast('This page is restricted. Extension disabled.', 'error');
+            return null;
+        }
+
         try {
             const response = await chrome.tabs.sendMessage(tab.id, { action: 'get_page_content' });
             return response;
         } catch (err) {
             console.error('Failed to get page content:', err);
-            showToast('Could not read page content. Refresh the page?', 'error');
+            if (err.message.includes('Could not establish connection')) {
+                showToast('Please reload the page to use the extension.', 'error');
+            } else {
+                showToast('Could not read page content.', 'error');
+            }
             return null;
         }
     }
@@ -307,6 +324,131 @@ document.addEventListener('DOMContentLoaded', () => {
                     showToast('PDF export complete!', 'success');
                 } else {
                     showToast(`PDF export failed: ${response?.error || 'Unknown error'}`, 'error');
+                }
+            });
+        }
+    });
+
+    // 5. JS Management
+    const jsPanel = document.getElementById('jsPanel');
+    const jsAllowedList = document.getElementById('jsAllowedList');
+    const jsBlockedList = document.getElementById('jsBlockedList');
+    const jsCurrentSiteHost = document.getElementById('jsCurrentSiteHost');
+    const jsToggleCurrentBtn = document.getElementById('jsToggleCurrentBtn');
+
+    function renderJsPanel() {
+        // Clear lists
+        jsAllowedList.innerHTML = '';
+        jsBlockedList.innerHTML = '';
+
+        // Get stored exceptions
+        chrome.storage.local.get({ js_exceptions: {} }, (data) => {
+            const exceptions = data.js_exceptions;
+            const allowed = [];
+            const blocked = [];
+
+            for (const [pattern, setting] of Object.entries(exceptions)) {
+                const host = pattern.replace('/*', '').replace(/https?:\/\//, '');
+                if (setting === 'allow') allowed.push({ host, pattern });
+                else blocked.push({ host, pattern });
+            }
+
+            const createListItem = (host, pattern) => {
+                const li = document.createElement('li');
+                li.innerHTML = `
+                    <span>${host}</span>
+                    <button class="js-site-delete-btn" title="Remove exception">
+                        <svg><use href="sf-symbols.svg#trash" /></svg>
+                    </button>
+                `;
+                li.querySelector('.js-site-delete-btn').addEventListener('click', () => {
+                    delete exceptions[pattern];
+                    chrome.storage.local.set({ js_exceptions: exceptions }, () => {
+                        // Also reset the content setting for this pattern
+                        chrome.contentSettings.javascript.clear({ primaryPattern: pattern }, () => {
+                            renderJsPanel();
+                            showToast(`Removed ${host}`, 'success');
+                        });
+                    });
+                });
+                return li;
+            };
+
+            if (allowed.length === 0) jsAllowedList.innerHTML = '<li><em>No allowed sites</em></li>';
+            else {
+                jsAllowedList.innerHTML = '';
+                allowed.forEach(({ host, pattern }) => jsAllowedList.appendChild(createListItem(host, pattern)));
+            }
+
+            if (blocked.length === 0) jsBlockedList.innerHTML = '<li><em>No blocked sites</em></li>';
+            else {
+                jsBlockedList.innerHTML = '';
+                blocked.forEach(({ host, pattern }) => jsBlockedList.appendChild(createListItem(host, pattern)));
+            }
+        });
+
+        // Update Current Site Status
+        chrome.tabs.query({ active: true, currentWindow: true }, ([tab]) => {
+            if (tab && tab.url) {
+                try {
+                    const url = new URL(tab.url);
+                    if (!url.protocol.startsWith('http')) {
+                        jsCurrentSiteHost.textContent = 'Restricted Page';
+                        jsToggleCurrentBtn.disabled = true;
+                        jsToggleCurrentBtn.textContent = 'N/A';
+                        return;
+                    }
+
+                    jsCurrentSiteHost.textContent = url.hostname;
+                    jsToggleCurrentBtn.disabled = false;
+
+                    // Check actual setting
+                    chrome.contentSettings.javascript.get({ primaryUrl: tab.url }, (details) => {
+                        if (chrome.runtime.lastError) {
+                            console.error(chrome.runtime.lastError);
+                            return;
+                        }
+                        const isAllowed = details.setting === 'allow';
+                        jsToggleCurrentBtn.innerHTML = `
+                            <svg class="icon"><use href="sf-symbols.svg#bolt" /></svg>
+                            <span>${isAllowed ? 'Disable JS' : 'Enable JS'}</span>
+                        `;
+                        jsToggleCurrentBtn.className = isAllowed ? 'btn secondary small-btn' : 'btn primary small-btn';
+                    });
+                } catch (e) {
+                    jsCurrentSiteHost.textContent = 'Invalid URL';
+                    jsToggleCurrentBtn.disabled = true;
+                }
+            }
+        });
+    }
+
+    document.getElementById('toggleJsBtn').addEventListener('click', () => {
+        // Hide other main sections
+        document.querySelector('.control-panel').hidden = true;
+        document.querySelector('.tools-panel').hidden = true;
+        if (!outputSection.hidden) outputSection.hidden = true;
+
+        jsPanel.hidden = false;
+        renderJsPanel();
+    });
+
+    document.getElementById('jsBackBtn').addEventListener('click', () => {
+        jsPanel.hidden = true;
+        document.querySelector('.control-panel').hidden = false;
+        document.querySelector('.tools-panel').hidden = false;
+    });
+
+    jsToggleCurrentBtn.addEventListener('click', async () => {
+        const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+        if (tab) {
+            chrome.runtime.sendMessage({ action: 'toggle_js', url: tab.url, tabId: tab.id }, (response) => {
+                if (chrome.runtime.lastError || !response.ok) {
+                    showToast('Failed to toggle JS.', 'error');
+                } else {
+                    showToast(`JS ${response.newSetting === 'allow' ? 'Enabled' : 'Disabled'}. Reloading...`, 'success');
+                    // Re-render panel after short delay to allow storage update
+                    setTimeout(renderJsPanel, 500);
                 }
             });
         }

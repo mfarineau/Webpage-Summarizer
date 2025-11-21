@@ -1,18 +1,88 @@
 <!DOCTYPE html>
 <html>
+
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="style.css">
   <title>Summary History</title>
 </head>
+
 <body>
-  <div class="history-container">
-    <h5 class="title">Summary History</h5>
-    <ul id="historyList" class="history-list"></ul>
-    <h5 class="title">Saved Pages</h5>
-    <ul id="pageList" class="history-list"></ul>
+  <div class="history-dashboard">
+    <!-- Sidebar -->
+    <aside class="history-sidebar">
+      <div class="sidebar-header">
+        <svg class="logo-icon">
+          <use href="sf-symbols.svg#doc.text.magnifyingglass" />
+        </svg>
+        <h2>Summarizer</h2>
+      </div>
+
+      <nav class="sidebar-nav">
+        <button id="navSummaries" class="nav-item active">
+          <svg class="icon">
+            <use href="sf-symbols.svg#text.justify.left" />
+          </svg>
+          <span>Summaries</span>
+        </button>
+        <button id="navPages" class="nav-item">
+          <svg class="icon">
+            <use href="sf-symbols.svg#doc" />
+          </svg>
+          <span>Saved Pages</span>
+        </button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <button id="clearAllBtn" class="btn tertiary danger-hover">
+          <svg class="icon">
+            <use href="sf-symbols.svg#trash" />
+          </svg>
+          <span>Clear All</span>
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="history-main">
+      <header class="main-header">
+        <h1 id="pageTitle">Summaries</h1>
+        <div class="header-controls">
+          <div class="search-bar">
+            <svg class="icon">
+              <use href="sf-symbols.svg#magnifyingglass" />
+            </svg>
+            <input type="text" id="searchInput" placeholder="Search...">
+          </div>
+        </div>
+      </header>
+
+      <div id="contentGrid" class="history-grid">
+        <!-- Cards injected here -->
+      </div>
+    </main>
   </div>
+
+  <!-- Viewer Modal -->
+  <div id="viewerModal" class="modal-overlay" hidden>
+    <div class="modal-content">
+      <header class="modal-header">
+        <h3 id="modalTitle">Title</h3>
+        <button id="closeModalBtn" class="btn-icon">
+          <svg class="icon">
+            <use href="sf-symbols.svg#xmark" />
+          </svg>
+        </button>
+      </header>
+      <div id="modalBody" class="modal-body"></div>
+      <footer class="modal-footer">
+        <a id="modalLink" href="#" target="_blank" class="btn secondary small-btn">Open Original</a>
+      </footer>
+    </div>
+  </div>
+
   <script src="history.js"></script>
 </body>
+
 </html>

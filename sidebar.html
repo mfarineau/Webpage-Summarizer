@@ -33,7 +33,44 @@
                     <span id="apiKeyStatus" class="status-indicator" role="status" aria-live="polite"></span>
                 </div>
             </div>
-            <button id="saveKeyBtn" class="btn secondary">Save Key</button>
+            <button id="saveKeyBtn" class="btn secondary">
+                <svg class="icon">
+                    <use href="sf-symbols.svg#checkmark" />
+                </svg>
+                <span>Save Key</span>
+            </button>
+        </div>
+
+        <!-- JS Settings Panel (Hidden by default) -->
+        <div id="jsPanel" class="panel-section" hidden>
+            <div class="panel-header">
+                <button id="jsBackBtn" class="btn-icon small" title="Back">
+                    <svg class="icon">
+                        <use href="sf-symbols.svg#chevron.left" />
+                    </svg>
+                </button>
+                <h5 class="title">JavaScript Settings</h5>
+            </div>
+
+            <div class="js-current-site">
+                <span id="jsCurrentSiteHost">Current Site</span>
+                <button id="jsToggleCurrentBtn" class="btn secondary small-btn">
+                    <svg class="icon">
+                        <use href="sf-symbols.svg#bolt" />
+                    </svg>
+                    <span>Enable JS</span>
+                </button>
+            </div>
+
+            <div class="js-list-section">
+                <h6 class="section-label">Allowed Sites</h6>
+                <ul id="jsAllowedList" class="js-site-list"></ul>
+            </div>
+
+            <div class="js-list-section">
+                <h6 class="section-label">Blocked Sites</h6>
+                <ul id="jsBlockedList" class="js-site-list"></ul>
+            </div>
         </div>
 
         <!-- Primary Controls -->
@@ -71,7 +108,12 @@
                 <div id="chatLog" class="chat-log"></div>
                 <div class="chat-input-row">
                     <input id="chatInput" type="text" placeholder="Ask a follow-up...">
-                    <button id="chatSendBtn" class="btn primary small-btn">Send</button>
+                    <button id="chatSendBtn" class="btn primary small-btn">
+                        <svg class="icon">
+                            <use href="sf-symbols.svg#paperplane" />
+                        </svg>
+                        <span>Send</span>
+                    </button>
                 </div>
             </div>
         </section>
@@ -80,6 +122,12 @@
         <section class="tools-panel">
             <h6 class="section-label">Tools</h6>
             <div class="tools-grid">
+                <button id="apiKeyBtn" class="btn secondary tool-btn">
+                    <svg class="icon">
+                        <use href="sf-symbols.svg#key" />
+                    </svg>
+                    <span>API Key</span>
+                </button>
                 <button id="biasBtn" class="btn secondary tool-btn">
                     <svg class="icon">
                         <use href="sf-symbols.svg#chart.bar" />
@@ -121,6 +169,12 @@
                         <use href="sf-symbols.svg#clock" />
                     </svg>
                     <span>History</span>
+                </button>
+                <button id="toggleJsBtn" class="btn secondary tool-btn">
+                    <svg class="icon">
+                        <use href="sf-symbols.svg#applescript" />
+                    </svg>
+                    <span>JS</span>
                 </button>
             </div>
         </section>
